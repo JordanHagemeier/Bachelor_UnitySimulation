@@ -4,9 +4,10 @@ using UnityEngine;
 
 public class SimulationManager : MonoBehaviour
 {
-    [SerializeField] private Terrain            m_Terrain;      public Terrain      terrain         { get { return m_Terrain; } }
-    [SerializeField] private Texture2D          m_OcclusionMap; public Texture2D    occlusionMap    { get { return m_OcclusionMap; } }
-    [SerializeField] private Texture2D          m_FlowMap;      public Texture2D    flowMap         { get { return m_FlowMap; } }
+    [SerializeField] private Terrain            m_Terrain;              public Terrain      terrain             { get { return m_Terrain; } }
+    [SerializeField] private Texture2D          m_OcclusionMap;         public Texture2D    occlusionMap        { get { return m_OcclusionMap; } }
+    [SerializeField] private Texture2D          m_FlowMap;              public Texture2D    flowMap             { get { return m_FlowMap; } }
+    [SerializeField] private int                m_TerrainChunkAmount;   public int          terrainChunkAmount  { get { return m_TerrainChunkAmount; } }
 
     [Header("Simulation Time")]
     [SerializeField] private float m_Timer;

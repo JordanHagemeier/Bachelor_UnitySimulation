@@ -24,6 +24,21 @@ public class PlantSpeciesInfoManager : MonoBehaviour
         
     }
 
+    private void CheckForMaturity()
+    {
+
+    }
+
+    private void CheckForDeath()
+    {
+
+    }
+
+    private void CalculateViability()
+    {
+
+    }
+
     private void OnDestroy()
     {
         SimulationManager.simulationTick -= AgePlant;
