@@ -9,23 +9,39 @@ public class PlantSpeciesInfoManager : MonoBehaviour
     [SerializeField] private float m_HealthyModelScaleFactor;
     [SerializeField] private float m_UnhealthyModelScaleFactor;
     [SerializeField] private float m_CurrentScaleFactor;
+    [SerializeField] private float m_OverallScaleFactor = 0.2f; 
     [SerializeField] private float m_CutOffFactorOcclusion;
     [SerializeField] private float m_TemperatureAtThisAltitude;
-    
+
+
+    public PlantSpeciesInfoManager()
+    {
+
+    }
+
+    public PlantSpeciesInfoManager(PlantSpeciesInfoScriptableObject ownInfo)
+    {
+        m_OwnSpeciesInfo = ownInfo;
+    }
+
+
+
 
     // Start is called before the first frame update
-    void Start()
+    private void OnEnable()
     {
+        m_IndividualPlantAge = 0;
         m_CurrentScaleFactor = m_HealthyModelScaleFactor; //only because we only have one factor so far
         SimulationManager.simulationTick += AgePlant;
         CalculateViability();
         CheckForDeath();
     }
+    
 
     public void AgePlant()
     {
         m_IndividualPlantAge++;
-        Vector3 newlyCalculatedScale =  new Vector3(m_IndividualPlantAge, m_IndividualPlantAge, m_IndividualPlantAge) * m_CurrentScaleFactor;
+        Vector3 newlyCalculatedScale =  new Vector3(m_IndividualPlantAge, m_IndividualPlantAge, m_IndividualPlantAge) * m_CurrentScaleFactor * m_OverallScaleFactor;
         if (float.IsNaN(newlyCalculatedScale.x))
         {
             Debug.LogError("Plant cannot be aged with incorrect NaN scale.");
@@ -33,6 +49,7 @@ public class PlantSpeciesInfoManager : MonoBehaviour
         }
        
         gameObject.transform.localScale = newlyCalculatedScale;
+        CheckForMaturity();
     }
 
     // Update is called once per frame
@@ -41,7 +58,7 @@ public class PlantSpeciesInfoManager : MonoBehaviour
         
    
         CheckForDeath();
-        CheckForMaturity();
+    
         CalculateViability();
     }
 
@@ -76,24 +93,31 @@ public class PlantSpeciesInfoManager : MonoBehaviour
         SimulationManager.simulationTick -= AgePlant;
     }
 
-    private void CalculateViability()
+    private float CalculateViability()
     {
         //a simple test of concept with occlusion, flow and temperature
-       
 
+        float overallViability;
         float occlusionFactor           = CalculateFactorWithMap(Singletons.simulationManager.occlusionMap, m_OwnSpeciesInfo.optimalOcclusion);
         float flowFactor                = CalculateFactorWithMap(Singletons.simulationManager.flowMap, m_OwnSpeciesInfo.optimalflow);
         float temperatureBasedOnHeight  = CalculateTemperatureFactorAtAltitude(Singletons.simulationManager.groundTemperature, m_OwnSpeciesInfo.optimalTemperature);
-        float overallViability = (occlusionFactor * m_OwnSpeciesInfo.occlusionFactorWeight) + (flowFactor * m_OwnSpeciesInfo.flowFactorWeight) + (temperatureBasedOnHeight * m_OwnSpeciesInfo.temperatureWeight);
+        if (temperatureBasedOnHeight <= 0.0f)
+        {
+            overallViability = 0.0f;
+        }
+        else
+        {
 
+            overallViability = (occlusionFactor * m_OwnSpeciesInfo.occlusionFactorWeight) + (flowFactor * m_OwnSpeciesInfo.flowFactorWeight) + (temperatureBasedOnHeight * m_OwnSpeciesInfo.temperatureWeight);
+        }
 
         if (float.IsNaN(overallViability))
         {
             Debug.LogError("Overall Viability is NaN");
-            return;
+            return -1.0f;
         }
         m_CurrentScaleFactor = overallViability;
-
+        return overallViability;
 
         //float differenceInOcclusion = m_OwnSpeciesInfo.optimalOcclusion - (float)colorChannels.r;
         //if(Mathf.Abs(differenceInOcclusion) >= m_CutOffFactorOcclusion)
