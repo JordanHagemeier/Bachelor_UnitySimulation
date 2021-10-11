@@ -12,6 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b8ba8bd08ab15c4cacc562fc1426a13, type: 3}
   m_Name: SpeciesAInfo
   m_EditorClassIdentifier: 
-  m_MaturityAge: 0
-  m_SeedDistributionAmount: 0
-  m_MaxDistributionDistance: 0
+  m_OwnSpeciesPrefab: {fileID: 2805257265314284349, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
+  m_MaturityAge: 9
+  m_DeathAge: 10
+  m_SeedDistributionAmount: 1
+  m_MaxDistributionDistance: 100
+  m_OptimalOcclusion: 0.8
+  m_OcclusionFactorWeight: 0
+  m_OptimalFlow: 0.9
+  m_FlowFactorWeight: 0
+  m_OptimalTemperature: 17
+  m_TemperatureWeight: 1
