@@ -1,0 +1,28 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+RWTexture2D<float4> Result;
+
+float Resolution;
+
+struct Cube {
+	
+	float3 position;
+	float4 color;
+};
+
+RWStructuredBuffer<Cube> cubes;
+
+
+[numthreads(10,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float xPos = id.x / Resolution;
+
+	Cube cube = cubes[id.x];
+	cube.color = float4(xPos, 0.0, 0.0, 1.0);
+
+	cubes[id.x] = cube;
+}

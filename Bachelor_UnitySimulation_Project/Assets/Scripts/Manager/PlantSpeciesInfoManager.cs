@@ -12,6 +12,7 @@ public class PlantSpeciesInfoManager : MonoBehaviour
     [SerializeField] private float m_OverallScaleFactor = 0.2f; 
     [SerializeField] private float m_CutOffFactorOcclusion;
     [SerializeField] private float m_TemperatureAtThisAltitude;
+    [SerializeField] private float m_TestValue;
 
 
     public PlantSpeciesInfoManager()
@@ -60,6 +61,7 @@ public class PlantSpeciesInfoManager : MonoBehaviour
         CheckForDeath();
     
         CalculateViability();
+        LookUpTestMapAndPrintValue();
     }
 
     private void CheckForMaturity()
@@ -143,6 +145,15 @@ public class PlantSpeciesInfoManager : MonoBehaviour
         return Mathf.Clamp01((1.0f - Mathf.Abs(1.0f - (mapColorsAtPosition.r / wantedValue))));
     }
 
+
+    private void LookUpTestMapAndPrintValue()
+    {
+        int mapDimensions = Singletons.simulationManager.testMap.width;
+        int correspondingXPos = (int)((gameObject.transform.position.x / Singletons.simulationManager.terrain.terrainData.size.x) * mapDimensions);
+        int correspondingZPos = (int)((gameObject.transform.position.z / Singletons.simulationManager.terrain.terrainData.size.x) * mapDimensions);
+        Color mapColorsAtPosition = Singletons.simulationManager.testMap.GetPixel(correspondingXPos, 1 - correspondingZPos);
+        m_TestValue = mapColorsAtPosition.r;
+    }
     
 
     private void OnDestroy()

@@ -7,6 +7,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] private Terrain            m_Terrain;                  public Terrain      terrain             { get { return m_Terrain; } }
     [SerializeField] private Texture2D          m_OcclusionMap;             public Texture2D    occlusionMap        { get { return m_OcclusionMap; } }
     [SerializeField] private Texture2D          m_FlowMap;                  public Texture2D    flowMap             { get { return m_FlowMap; } }
+    [SerializeField] private Texture2D          m_TestMap;                  public Texture2D    testMap             { get { return m_TestMap; } }
     [SerializeField] private int                m_TerrainDivisionAmount;    public int          terrainDivisionAmount  { get { return m_TerrainDivisionAmount; } }
     [SerializeField] private float              m_GroundTemperature;        public float        groundTemperature { get { return m_GroundTemperature; } }
     [SerializeField] private float              m_HeightScalingFactor;      public float heightScalingFactor { get { return m_HeightScalingFactor; } }
