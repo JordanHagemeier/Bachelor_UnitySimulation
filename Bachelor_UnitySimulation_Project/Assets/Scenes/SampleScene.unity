@@ -211,6 +211,7 @@ GameObject:
   - component: {fileID: 228600922}
   - component: {fileID: 228600924}
   - component: {fileID: 228600925}
+  - component: {fileID: 228600926}
   m_Layer: 0
   m_Name: SimulationManager
   m_TagString: Untagged
@@ -233,7 +234,8 @@ MonoBehaviour:
   m_Terrain: {fileID: 74521680}
   m_OcclusionMap: {fileID: 2800000, guid: 161bb2be6fb3a944bb3840d5ad15ff97, type: 3}
   m_FlowMap: {fileID: 2800000, guid: 4b1de75406d7fd14faff16716078ee4b, type: 3}
-  m_TestMap: {fileID: 2800000, guid: f7d2d0c9710d1454ca56ee37bac801bf, type: 3}
+  m_TestMap: {fileID: 2800000, guid: f342f1c526c109c4891c871bbfa16e9a, type: 3}
+  m_TerrainMaterial: {fileID: 2100000, guid: e27dfd536aa26ba42b9d3b9074fa4826, type: 2}
   m_TerrainDivisionAmount: 0
   m_GroundTemperature: 20
   m_HeightScalingFactor: 50
@@ -10288,6 +10290,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_SeedManager: {fileID: 228600924}
   m_SimulationManager: {fileID: 228600922}
+--- !u!114 &228600926
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 228600921}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e276432119d16504aa9fffacdac756c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  testFile: D:\Uni\Bachelor\Data\SoilPhysicalCompositionData\Sand_EU23\test.txt
+  texture: {fileID: 2800000, guid: 7b66bba9f799b3245a7e5e5fb65f42f4, type: 3}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -10482,7 +10498,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2805257265314284337, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 627.47
+      value: 649.7
       objectReference: {fileID: 0}
     - target: {fileID: 2805257265314284337, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
       propertyPath: m_LocalPosition.y
@@ -10490,7 +10506,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2805257265314284337, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 295
+      value: 502.7
       objectReference: {fileID: 0}
     - target: {fileID: 2805257265314284337, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
       propertyPath: m_LocalRotation.w
