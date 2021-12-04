@@ -13,6 +13,7 @@ public class PlantSpeciesInfoManager : MonoBehaviour
     [SerializeField] private float m_CutOffFactorOcclusion;
     [SerializeField] private float m_TemperatureAtThisAltitude;
     [SerializeField] private float m_TestValue;
+    private bool m_CanSpawn = false;
 
 
     public PlantSpeciesInfoManager()
@@ -36,6 +37,7 @@ public class PlantSpeciesInfoManager : MonoBehaviour
         SimulationManager.simulationTick += AgePlant;
         CalculateViability();
         CheckForDeath();
+        Singletons.simulationManager.m_ActivePlants++;
     }
     
 
@@ -48,9 +50,9 @@ public class PlantSpeciesInfoManager : MonoBehaviour
             Debug.LogError("Plant cannot be aged with incorrect NaN scale.");
             return;
         }
-       
-        gameObject.transform.localScale = newlyCalculatedScale;
-        CheckForMaturity();
+        m_CanSpawn = true;
+        //gameObject.transform.localScale = newlyCalculatedScale;
+        
     }
 
     // Update is called once per frame
@@ -59,15 +61,16 @@ public class PlantSpeciesInfoManager : MonoBehaviour
         
    
         CheckForDeath();
-    
+        CheckForMaturity();
         CalculateViability();
         LookUpTestMapAndPrintValue();
     }
 
     private void CheckForMaturity()
     {
-        if(m_IndividualPlantAge >= m_OwnSpeciesInfo.maturityAge)
+        if(m_IndividualPlantAge >= m_OwnSpeciesInfo.maturityAge && m_CanSpawn)
         {
+            m_CanSpawn = false;
             //start producing seeds around you
             Singletons.seedManager.ScatterSeedsAroundPoint(this);
         }
@@ -92,7 +95,13 @@ public class PlantSpeciesInfoManager : MonoBehaviour
     private void PlantDies()
     {
         gameObject.SetActive(false);
+        
+    }
+
+    private void OnDisable()
+    {
         SimulationManager.simulationTick -= AgePlant;
+        Singletons.simulationManager.m_ActivePlants--;
     }
 
     private float CalculateViability()

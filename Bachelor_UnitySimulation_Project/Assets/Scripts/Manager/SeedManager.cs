@@ -127,10 +127,10 @@ public class SeedManager : MonoBehaviour
         {
             newSeed.AddComponent<PlantSpeciesInfoManager>();
         }
-        newSeed.GetComponent<PlantSpeciesInfoManager>().m_OwnSpeciesInfo    = prefab.GetComponent<PlantSpeciesInfoManager>().m_OwnSpeciesInfo;
-        newSeed.GetComponent<MeshFilter>().mesh                             = prefab.GetComponent<MeshFilter>().mesh;
-        newSeed.GetComponent<MeshRenderer>().material                       = prefab.GetComponent<MeshRenderer>().material;
-        newSeed.transform.localScale = new Vector3(0.0f, 0.0f, 0.0f);
+        //newSeed.GetComponent<PlantSpeciesInfoManager>().m_OwnSpeciesInfo    = prefab.GetComponent<PlantSpeciesInfoManager>().m_OwnSpeciesInfo;
+        //newSeed.GetComponent<MeshFilter>().mesh                             = prefab.GetComponent<MeshFilter>().mesh;
+        //newSeed.GetComponent<MeshRenderer>().material                       = prefab.GetComponent<MeshRenderer>().material;
+        //newSeed.transform.localScale = new Vector3(0.0f, 0.0f, 0.0f);
         return newSeed;
     }
     
@@ -158,7 +158,6 @@ public class SeedManager : MonoBehaviour
                     return;
                 }
                 newSeed.transform.position = calculatedPos;
-                m_AllPlants.Add(newSeed);
                 //seeds.m_Seeds.Add(newSeed);
             }
             

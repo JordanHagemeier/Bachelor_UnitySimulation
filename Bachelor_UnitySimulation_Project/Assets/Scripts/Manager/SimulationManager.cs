@@ -24,6 +24,8 @@ public class SimulationManager : MonoBehaviour
     public delegate void SimulationTick();
     public static SimulationTick simulationTick;
 
+    public int m_ActivePlants = 0;
+
 
     // Start is called before the first frame update
     void Start()
@@ -35,15 +37,15 @@ public class SimulationManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        m_Timer += Time.deltaTime;
-        m_TimeTillNextSimTick = m_TimeScale - m_Timer;
-        m_TimeTillNextSimTickPercentage = m_Timer / m_TimeScale;
-        if(m_TimeTillNextSimTick <= 0.0f)
-        {
-            m_Timer = 0.0f;
-            m_TimeTillNextSimTick = m_TimeScale;
-            simulationTick();
-        }
+        //m_Timer += Time.deltaTime;
+        //m_TimeTillNextSimTick = m_TimeScale - m_Timer;
+        //m_TimeTillNextSimTickPercentage = m_Timer / m_TimeScale;
+        //if(m_TimeTillNextSimTick <= 0.0f)
+        //{
+        //    m_Timer = 0.0f;
+        //    m_TimeTillNextSimTick = m_TimeScale;
+        //    simulationTick();
+        //}
     }
 
    

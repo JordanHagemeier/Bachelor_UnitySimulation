@@ -7,6 +7,7 @@ using UnityEngine;
 public class PlantSpeciesInfoScriptableObject : ScriptableObject
 {
     [Header("Reproduction")]
+    [SerializeField] private PlantType m_PlantType;             public PlantType plantType { get { return m_PlantType; } }
     [SerializeField] private GameObject m_OwnSpeciesPrefab;     public GameObject ownSpeciesPrefab { get { return m_OwnSpeciesPrefab; } }
     [SerializeField] private int m_MaturityAge;                 public int maturityAge { get { return m_MaturityAge; } }
     [SerializeField] private int m_DeathAge;                    public int deathAge { get { return m_DeathAge; } }
