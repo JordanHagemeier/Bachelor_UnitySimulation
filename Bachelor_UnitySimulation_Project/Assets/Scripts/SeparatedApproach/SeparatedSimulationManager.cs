@@ -19,6 +19,9 @@ public class SeparatedSimulationManager : MonoBehaviour
     private float timer;
 
     private int m_IDCounter = 0;
+
+    public PlantInfoStruct[] copiedPlants;
+    private VisualizationManager m_VisManager; 
     
 
 
@@ -34,6 +37,8 @@ public class SeparatedSimulationManager : MonoBehaviour
             m_OcclusionMap = Singletons.simulationManager.occlusionMap;
         }
         m_Terrain = Singletons.simulationManager.terrain;
+
+        m_VisManager = gameObject.GetComponent<VisualizationManager>();
         //initialize first couple of trees in the list 
         InitializePlantInfos();
         //fill ground info structs with data about their pixel position
@@ -43,7 +48,17 @@ public class SeparatedSimulationManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        TickPlants();
+        bool plantsAreUpdated = TickPlants();
+        if (plantsAreUpdated == true)
+        {
+            
+            copiedPlants = new PlantInfoStruct[plants.Count];
+            for(int i = 0; i < plants.Count; i++)
+            {
+                copiedPlants[i] = plants[i];
+            }
+            m_VisManager.copiedPlants = copiedPlants;
+        }
 
         //"Tick Ground" needs further evaluation if it is even necessary or if I have enough data and research for correct soil behavior
         TickGround();
@@ -104,6 +119,7 @@ public class SeparatedSimulationManager : MonoBehaviour
 
                 }
             }
+            success = true;
         }
         //for each plant in plants List:
         //  - calculate viability

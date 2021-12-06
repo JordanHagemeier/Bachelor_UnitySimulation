@@ -591,6 +591,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1622023710}
   - component: {fileID: 1622023709}
+  - component: {fileID: 1622023711}
   m_Layer: 0
   m_Name: SeparatedSimManager
   m_TagString: Untagged
@@ -611,13 +612,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   plants: []
-  m_InitialPlantAmount: 1000
+  m_InitialPlantAmount: 10
   plantSpecies:
   - {fileID: 11400000, guid: b8a65a66aaeb1dc499a259efae184991, type: 2}
   m_FlowMap: {fileID: 0}
   m_OcclusionMap: {fileID: 0}
   m_Terrain: {fileID: 0}
-  m_TimeTillOneYearIsOver: 0.5
+  m_TimeTillOneYearIsOver: 0.2
+  copiedPlants: []
 --- !u!4 &1622023710
 Transform:
   m_ObjectHideFlags: 0
@@ -632,6 +634,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1622023711
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1622023708}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5c7b7fb9e19889a4dade6c856f591602, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_InstancedMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_InstancedMaterial: {fileID: 2100000, guid: c66580a1fcf0db2489de09ceacb9a6ba, type: 2}
+  m_CopiedPlants: []
+  m_ScaleFactor: 5
 --- !u!1 &2127248373 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2805257265314284349, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
