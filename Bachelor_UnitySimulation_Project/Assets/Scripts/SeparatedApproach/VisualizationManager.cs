@@ -9,7 +9,7 @@ public class VisualizationManager : MonoBehaviour
     [SerializeField] private Mesh m_InstancedMesh;
     [SerializeField] private Material m_InstancedMaterial;
     private bool m_PlantsHaveBeenUpdated = false;
-    [SerializeField] private PlantInfoStruct[] m_CopiedPlants; public PlantInfoStruct[] copiedPlants { set { m_CopiedPlants = value; m_PlantsHaveBeenUpdated = true; } }
+    private PlantInfoStruct[] m_CopiedPlants; public PlantInfoStruct[] copiedPlants { set { m_CopiedPlants = value; m_PlantsHaveBeenUpdated = true; } }
     Matrix4x4[] positionMatricesArray;
     [SerializeField] private float m_ScaleFactor;
 

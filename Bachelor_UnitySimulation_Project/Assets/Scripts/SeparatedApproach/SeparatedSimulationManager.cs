@@ -5,7 +5,8 @@ using UnityEngine;
 public class SeparatedSimulationManager : MonoBehaviour
 {
     
-    [SerializeField] private List<PlantInfoStruct> plants;
+    private List<PlantInfoStruct> plants;
+    [SerializeField] private int m_AmountOfPlants;
     [SerializeField] private GroundInfoStruct[,] ground;
 
 
@@ -20,7 +21,7 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private int m_IDCounter = 0;
 
-    public PlantInfoStruct[] copiedPlants;
+    [HideInInspector] public PlantInfoStruct[] copiedPlants;
     private VisualizationManager m_VisManager; 
     
 
@@ -41,6 +42,7 @@ public class SeparatedSimulationManager : MonoBehaviour
         m_VisManager = gameObject.GetComponent<VisualizationManager>();
         //initialize first couple of trees in the list 
         InitializePlantInfos();
+        m_AmountOfPlants = plants.Count;
         //fill ground info structs with data about their pixel position
         InitializeGroundInfos();
     }
@@ -58,6 +60,7 @@ public class SeparatedSimulationManager : MonoBehaviour
                 copiedPlants[i] = plants[i];
             }
             m_VisManager.copiedPlants = copiedPlants;
+            
         }
 
         //"Tick Ground" needs further evaluation if it is even necessary or if I have enough data and research for correct soil behavior
@@ -66,6 +69,7 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private void InitializePlantInfos()
     {
+        plants = new List<PlantInfoStruct>();
         for(int i = 0; i < m_InitialPlantAmount; i++)
         {
             Bounds terrainBounds = Singletons.simulationManager.terrain.terrainData.bounds;
@@ -119,6 +123,7 @@ public class SeparatedSimulationManager : MonoBehaviour
 
                 }
             }
+            m_AmountOfPlants = plants.Count;
             success = true;
         }
         //for each plant in plants List:
