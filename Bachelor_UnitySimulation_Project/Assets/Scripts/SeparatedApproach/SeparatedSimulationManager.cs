@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
+using System.Xml.Serialization;
 using UnityEngine;
+using System.IO;
 
 public class SeparatedSimulationManager : MonoBehaviour
 {
@@ -16,14 +19,20 @@ public class SeparatedSimulationManager : MonoBehaviour
     [SerializeField] Texture2D m_OcclusionMap;
     [SerializeField] private Terrain m_Terrain;
 
+    [SerializeField] private Texture2D m_ClayMap;
+
     [SerializeField] private float m_TimeTillOneYearIsOver;
     private float timer;
 
     private int m_IDCounter = 0;
 
-    [HideInInspector] public PlantInfoStruct[] copiedPlants;
-    private VisualizationManager m_VisManager; 
     
+    [HideInInspector] public PlantInfoStruct[] copiedPlants;
+    private VisualizationManager m_VisManager;
+
+    CurrentPlantsSerializer plantSerializer = new CurrentPlantsSerializer();
+    PlantSpeciesTable plantSpeciesTable = new PlantSpeciesTable();
+
 
 
     // Start is called before the first frame update
@@ -40,11 +49,29 @@ public class SeparatedSimulationManager : MonoBehaviour
         m_Terrain = Singletons.simulationManager.terrain;
 
         m_VisManager = gameObject.GetComponent<VisualizationManager>();
+
+
+        //create a dictionary of plant type enums to plant type scriptable objects, to enable deserialization of plant info structs
+        for(int k = 0; k < plantSpecies.Length; k++)
+        {
+            plantSpeciesTable.AddToDictionary(plantSpecies[k].plantType, plantSpecies[k]);
+        }
+
         //initialize first couple of trees in the list 
         InitializePlantInfos();
         m_AmountOfPlants = plants.Count;
         //fill ground info structs with data about their pixel position
         InitializeGroundInfos();
+    }
+
+    private void CopyPlantInfosToVisPlantArray(List<PlantInfoStruct> plantsToBeCopied)
+    {
+        copiedPlants = new PlantInfoStruct[plantsToBeCopied.Count];
+        for (int i = 0; i < plantsToBeCopied.Count; i++)
+        {
+            copiedPlants[i] = plantsToBeCopied[i];
+        }
+        m_VisManager.copiedPlants = copiedPlants;
     }
 
     // Update is called once per frame
@@ -53,19 +80,38 @@ public class SeparatedSimulationManager : MonoBehaviour
         bool plantsAreUpdated = TickPlants();
         if (plantsAreUpdated == true)
         {
-            
-            copiedPlants = new PlantInfoStruct[plants.Count];
-            for(int i = 0; i < plants.Count; i++)
+
+            CopyPlantInfosToVisPlantArray(plants);
+
+            plantSerializer.currentPlantsInSim = new List<PlantInfoStruct>();
+            for(int k = 0; k < copiedPlants.Length; k++)
             {
-                copiedPlants[i] = plants[i];
+                plantSerializer.currentPlantsInSim.Add(copiedPlants[k]);
             }
-            m_VisManager.copiedPlants = copiedPlants;
             
         }
 
         //"Tick Ground" needs further evaluation if it is even necessary or if I have enough data and research for correct soil behavior
         TickGround();
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            plantSerializer.Save(Path.Combine(Application.dataPath, "monsters.xml"));
+            Debug.Log("Did it!");
+        }
+        if (Input.GetMouseButtonDown(1))
+        {
+            var loadedPlants = CurrentPlantsSerializer.Load(Path.Combine(Application.dataPath, "monsters.xml"));
+            plants = loadedPlants.currentPlantsInSim;
+            CopyPlantInfosToVisPlantArray(plants);
+
+            plantsAreUpdated = true;
+            Debug.Log("Loaded!");
+            Debug.Log(loadedPlants.currentPlantsInSim[0].id);
+            Debug.Log(loadedPlants.currentPlantsInSim[0].health);
+        }
     }
+   
 
     private void InitializePlantInfos()
     {
@@ -137,7 +183,7 @@ public class SeparatedSimulationManager : MonoBehaviour
     private bool CheckIfPlantIsAlive(PlantInfoStruct plant)
     {
         bool isAlive = true;
-        if (plant.age >= plant.plantSpeciesInfo.deathAge)
+        if (plant.age >= plantSpeciesTable.GetSOByType(plant.type).deathAge)
         {
             //die
             //might have to unregister from the seed manager, but I will look into that later
@@ -153,7 +199,7 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private bool CheckIfPlantCanReproduce(PlantInfoStruct plant)
     {
-        if(plant.age >= plant.plantSpeciesInfo.maturityAge)
+        if(plant.age >= plantSpeciesTable.GetSOByType(plant.type).maturityAge)
         {
             ScatterSeeds(plant);
             return true;
@@ -167,13 +213,14 @@ public class SeparatedSimulationManager : MonoBehaviour
         //a simple test of concept with occlusion, flow and temperature
 
         float overallViability;
-        float occlusionFactor = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].terrainOcclusion, plant.plantSpeciesInfo.optimalOcclusion);
-        float flowFactor = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].waterflow, plant.plantSpeciesInfo.optimalflow);
+        float occlusionFactor = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].terrainOcclusion, plantSpeciesTable.GetSOByType(plant.type).optimalOcclusion);
+        float flowFactor = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].waterflow, plantSpeciesTable.GetSOByType(plant.type).optimalflow);
         //float occlusionFactor_OLD = CalculateFactorWithMap(Singletons.simulationManager.occlusionMap, plant.plantSpeciesInfo.optimalOcclusion, plant);
         //float flowFactor_OLD = CalculateFactorWithMap(Singletons.simulationManager.flowMap, plant.plantSpeciesInfo.optimalflow, plant);
-
+        float soilCompositionValue = CalculateSoilCompositionValue(new Vector2((int)plant.position.x, (int)plant.position.z));
         
-        float temperatureBasedOnHeight = CalculateTemperatureFactorAtAltitude(Singletons.simulationManager.groundTemperature, plant.plantSpeciesInfo.optimalTemperature, plant);
+
+        float temperatureBasedOnHeight = CalculateTemperatureFactorAtAltitude(Singletons.simulationManager.groundTemperature, plantSpeciesTable.GetSOByType(plant.type).optimalTemperature, plant);
         if (temperatureBasedOnHeight <= 0.0f)
         {
             overallViability = 0.0f;
@@ -181,7 +228,10 @@ public class SeparatedSimulationManager : MonoBehaviour
         else
         {
 
-            overallViability = (occlusionFactor * plant.plantSpeciesInfo.occlusionFactorWeight) + (flowFactor * plant.plantSpeciesInfo.flowFactorWeight) + (temperatureBasedOnHeight * plant.plantSpeciesInfo.temperatureWeight);
+            overallViability = (occlusionFactor * plantSpeciesTable.GetSOByType(plant.type).occlusionFactorWeight) 
+                + (flowFactor * plantSpeciesTable.GetSOByType(plant.type).flowFactorWeight) 
+                + (temperatureBasedOnHeight * plantSpeciesTable.GetSOByType(plant.type).temperatureWeight 
+                + (soilCompositionValue * 0.1f));
         }
 
         if (float.IsNaN(overallViability))
@@ -198,16 +248,16 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private void ScatterSeeds(PlantInfoStruct plant)
     {
-        for (int i = 0; i < plant.plantSpeciesInfo.seedDistributionAmount; i++)
+        for (int i = 0; i < plantSpeciesTable.GetSOByType(plant.type).seedDistributionAmount; i++)
         {
-            Vector2 randomPos = Random.insideUnitCircle * plant.plantSpeciesInfo.maxDistributionDistance;
+            Vector2 randomPos = Random.insideUnitCircle * plantSpeciesTable.GetSOByType(plant.type).maxDistributionDistance;
 
             Vector3 calculatedPos = plant.position + new Vector3(randomPos.x, 0.0f, randomPos.y);
             calculatedPos.y = m_Terrain.SampleHeight(calculatedPos);
             if (IsCalculatedNewPosWithinTerrainBounds(calculatedPos))
             {
                 m_IDCounter++;
-                PlantInfoStruct newPlant = new PlantInfoStruct(calculatedPos, m_IDCounter, plant.plantSpeciesInfo);
+                PlantInfoStruct newPlant = new PlantInfoStruct(calculatedPos, m_IDCounter, plantSpeciesTable.GetSOByType(plant.type));
                 plants.Add(newPlant);
                 
             }
@@ -258,5 +308,27 @@ public class SeparatedSimulationManager : MonoBehaviour
         bool success = false;
 
         return success;
+    }
+
+    private float CalculateSoilCompositionValue(Vector2 pos)
+    {
+        float soilViabilityValue = 0.0f;
+        float clayValue = GetValueFromSoilCompositionMap(m_ClayMap, pos);
+        //do a lot of calculations here about whether the plant likes the composition values or not
+        soilViabilityValue += clayValue;
+        return soilViabilityValue;
+    }
+
+    private float GetValueFromSoilCompositionMap(Texture2D texture,Vector2 pos)
+    {
+        int posXOnTex = (int)((pos.x / m_Terrain.terrainData.bounds.max.x) * texture.width);
+        int posYOnTex = (int)((pos.y / m_Terrain.terrainData.bounds.max.z) * texture.height);
+        var pixels = texture.GetPixels(posXOnTex, posYOnTex, 1,1);
+        float sumValue = 0.0f;
+        foreach(var pixel in pixels)
+        {
+            sumValue += pixel.r;
+        }
+        return (sumValue / pixels.Length) * 256.0f;
     }
 }

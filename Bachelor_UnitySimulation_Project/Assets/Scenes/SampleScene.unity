@@ -404,7 +404,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testFile: D:\Uni\Bachelor\Data\SoilPhysicalCompositionData\Sand_EU23\test.txt
-  texture: {fileID: 2800000, guid: 05ab36c6874dbfa42a87fcb0870c7f59, type: 3}
+  texture: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -611,13 +611,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26aea7014c7fd2141bb51e593338e1a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  plants: []
+  m_AmountOfPlants: 0
   m_InitialPlantAmount: 10
   plantSpecies:
   - {fileID: 11400000, guid: b8a65a66aaeb1dc499a259efae184991, type: 2}
-  m_FlowMap: {fileID: 0}
-  m_OcclusionMap: {fileID: 0}
-  m_Terrain: {fileID: 0}
+  m_FlowMap: {fileID: 2800000, guid: 4b1de75406d7fd14faff16716078ee4b, type: 3}
+  m_OcclusionMap: {fileID: 2800000, guid: 161bb2be6fb3a944bb3840d5ad15ff97, type: 3}
+  m_Terrain: {fileID: 74521680}
+  m_ClayMap: {fileID: 2800000, guid: b916f36ddd4b9a941939d9f9c0f5b0fa, type: 3}
   m_TimeTillOneYearIsOver: 0.2
   copiedPlants: []
 --- !u!4 &1622023710
@@ -648,7 +649,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_InstancedMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   m_InstancedMaterial: {fileID: 2100000, guid: c66580a1fcf0db2489de09ceacb9a6ba, type: 2}
-  m_CopiedPlants: []
   m_ScaleFactor: 5
 --- !u!1 &2127248373 stripped
 GameObject:
