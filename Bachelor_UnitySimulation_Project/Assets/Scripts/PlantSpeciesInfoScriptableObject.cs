@@ -10,6 +10,7 @@ public class PlantSpeciesInfoScriptableObject : ScriptableObject
     [SerializeField] private PlantType m_PlantType;             public PlantType plantType { get { return m_PlantType; } }
     [SerializeField] private GameObject m_OwnSpeciesPrefab;     public GameObject ownSpeciesPrefab { get { return m_OwnSpeciesPrefab; } }
     [SerializeField] private int m_MaturityAge;                 public int maturityAge { get { return m_MaturityAge; } }
+    private float m_AgeBasedGrowthFactor;                       public float ageBasedGrowthFactor { get { return m_AgeBasedGrowthFactor; } }
     [SerializeField] private int m_DeathAge;                    public int deathAge { get { return m_DeathAge; } }
     [SerializeField] private int m_SeedDistributionAmount;      public int seedDistributionAmount { get { return m_SeedDistributionAmount; } }
     [SerializeField] private float m_MaxDistributionDistance;   public float maxDistributionDistance { get { return m_MaxDistributionDistance; } }
@@ -25,6 +26,10 @@ public class PlantSpeciesInfoScriptableObject : ScriptableObject
     [Range(0.0f, 1.0f)]
     [SerializeField] private float m_TemperatureWeight; public float temperatureWeight { get { return m_TemperatureWeight; } }
 
+    [SerializeField] private float m_SoilCompositionWeight; public float soilCompositionWeight { get { return m_SoilCompositionWeight; } }
+    [SerializeField] private float m_PreferredClayValue; public float preferredClayValue { get { return m_PreferredClayValue; } }
+    [SerializeField] private float m_PreferredSandValue; public float preferredSandValue { get { return m_PreferredSandValue; } }
+    [SerializeField] private float m_PreferredSiltValue; public float preferredSiltValue { get { return m_PreferredSiltValue; } }
     //Viability 
     //We have altitude, occlusion, flow & soil composition
     //each species should probably have own specifics for each of these values on what it needs and how important it is

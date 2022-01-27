@@ -8,7 +8,8 @@ using UnityEngine;
 
 public enum PlantType
 {
-    TestPlant,
+    TestPlantA,
+    TestPlantB,
     Count
 }
 

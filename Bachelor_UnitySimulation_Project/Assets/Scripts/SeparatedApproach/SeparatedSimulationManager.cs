@@ -19,7 +19,13 @@ public class SeparatedSimulationManager : MonoBehaviour
     [SerializeField] Texture2D m_OcclusionMap;
     [SerializeField] private Terrain m_Terrain;
 
+    [SerializeField] private Texture2D m_UsableGround;
+    [SerializeField] private float m_SeaLevelCutOff;
+    [SerializeField] private float m_DistanceBetweenTrees;
+
     [SerializeField] private Texture2D m_ClayMap;
+    [SerializeField] private Texture2D m_SandMap;
+    [SerializeField] private Texture2D m_SiltMap;
 
     [SerializeField] private float m_TimeTillOneYearIsOver;
     private float timer;
@@ -129,7 +135,7 @@ public class SeparatedSimulationManager : MonoBehaviour
 
             //initialize new plant with that position 
             m_IDCounter++;
-            PlantInfoStruct newPlant = new PlantInfoStruct(randomPos, m_IDCounter, plantSpecies[0]);
+            PlantInfoStruct newPlant = new PlantInfoStruct(randomPos, m_IDCounter, plantSpecies[Random.Range(0, plantSpecies.Length)]);
             plants.Add(newPlant);
         }
     }
@@ -201,6 +207,7 @@ public class SeparatedSimulationManager : MonoBehaviour
     {
         if(plant.age >= plantSpeciesTable.GetSOByType(plant.type).maturityAge)
         {
+           // plantSpeciesTable.GetSOByType(plant.type).ageBasedGrowthFactor = Mathf.
             ScatterSeeds(plant);
             return true;
         }
@@ -211,16 +218,16 @@ public class SeparatedSimulationManager : MonoBehaviour
     private float CalculateViability(PlantInfoStruct plant)
     {
         //a simple test of concept with occlusion, flow and temperature
-
+        PlantSpeciesInfoScriptableObject currentPlantSO     = plantSpeciesTable.GetSOByType(plant.type);
         float overallViability;
-        float occlusionFactor = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].terrainOcclusion, plantSpeciesTable.GetSOByType(plant.type).optimalOcclusion);
-        float flowFactor = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].waterflow, plantSpeciesTable.GetSOByType(plant.type).optimalflow);
+        float occlusionFactor           = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].terrainOcclusion, currentPlantSO.optimalOcclusion);
+        float flowFactor                = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].waterflow, currentPlantSO.optimalflow);
         //float occlusionFactor_OLD = CalculateFactorWithMap(Singletons.simulationManager.occlusionMap, plant.plantSpeciesInfo.optimalOcclusion, plant);
         //float flowFactor_OLD = CalculateFactorWithMap(Singletons.simulationManager.flowMap, plant.plantSpeciesInfo.optimalflow, plant);
-        float soilCompositionValue = CalculateSoilCompositionValue(new Vector2((int)plant.position.x, (int)plant.position.z));
+        float soilCompositionValue      = CalculateSoilCompositionValue(new Vector2((int)plant.position.x, (int)plant.position.z), currentPlantSO);
         
 
-        float temperatureBasedOnHeight = CalculateTemperatureFactorAtAltitude(Singletons.simulationManager.groundTemperature, plantSpeciesTable.GetSOByType(plant.type).optimalTemperature, plant);
+        float temperatureBasedOnHeight = CalculateTemperatureFactorAtAltitude(Singletons.simulationManager.groundTemperature, currentPlantSO.optimalTemperature, plant);
         if (temperatureBasedOnHeight <= 0.0f)
         {
             overallViability = 0.0f;
@@ -228,10 +235,10 @@ public class SeparatedSimulationManager : MonoBehaviour
         else
         {
 
-            overallViability = (occlusionFactor * plantSpeciesTable.GetSOByType(plant.type).occlusionFactorWeight) 
-                + (flowFactor * plantSpeciesTable.GetSOByType(plant.type).flowFactorWeight) 
-                + (temperatureBasedOnHeight * plantSpeciesTable.GetSOByType(plant.type).temperatureWeight 
-                + (soilCompositionValue * 0.1f));
+            overallViability = (occlusionFactor * currentPlantSO.occlusionFactorWeight) 
+                + (flowFactor * currentPlantSO.flowFactorWeight) 
+                + (temperatureBasedOnHeight * currentPlantSO.temperatureWeight 
+                + (soilCompositionValue * currentPlantSO.soilCompositionWeight));
         }
 
         if (float.IsNaN(overallViability))
@@ -248,22 +255,75 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private void ScatterSeeds(PlantInfoStruct plant)
     {
-        for (int i = 0; i < plantSpeciesTable.GetSOByType(plant.type).seedDistributionAmount; i++)
+        PlantSpeciesInfoScriptableObject currentPlantSO = plantSpeciesTable.GetSOByType(plant.type);
+        for (int i = 0; i < currentPlantSO.seedDistributionAmount; i++)
         {
-            Vector2 randomPos = Random.insideUnitCircle * plantSpeciesTable.GetSOByType(plant.type).maxDistributionDistance;
+            Vector2 randomPos = Random.insideUnitCircle * currentPlantSO.maxDistributionDistance;
 
             Vector3 calculatedPos = plant.position + new Vector3(randomPos.x, 0.0f, randomPos.y);
             calculatedPos.y = m_Terrain.SampleHeight(calculatedPos);
-            if (IsCalculatedNewPosWithinTerrainBounds(calculatedPos))
+            if (IsCalculatedNewPosWithinTerrainBounds(calculatedPos) && IsOnLand(calculatedPos) && !IsWithinDistanceToOthers(calculatedPos))
             {
                 m_IDCounter++;
-                PlantInfoStruct newPlant = new PlantInfoStruct(calculatedPos, m_IDCounter, plantSpeciesTable.GetSOByType(plant.type));
+                PlantInfoStruct newPlant = new PlantInfoStruct(calculatedPos, m_IDCounter, currentPlantSO);
                 plants.Add(newPlant);
                 
             }
 
         }
        
+    }
+
+
+    private bool IsWithinDistanceToOthers(Vector3 pos)
+    {
+
+        bool withinRad = false;
+        foreach(PlantInfoStruct plant in plants)
+        {
+            
+            float distance = Vector2.SqrMagnitude(new Vector2(pos.x - plant.position.x, pos.z - plant.position.z));
+            if(distance < m_DistanceBetweenTrees * m_DistanceBetweenTrees)
+            {
+                withinRad = true;
+                return withinRad;
+            }
+        }
+        return withinRad;
+    }
+
+    private float AffectedViabilityThroughProximity(PlantInfoStruct givenPlant)
+    {
+        int countOfTreesInProximity = 0;
+
+        float resultingViability = givenPlant.health;
+        foreach(PlantInfoStruct plant in plants)
+        {
+            float distance = Vector2.SqrMagnitude(new Vector2(givenPlant.position.x - plant.position.x, givenPlant.position.z - plant.position.z));
+            if (distance < m_DistanceBetweenTrees * m_DistanceBetweenTrees)
+            {
+                if(givenPlant.health > plant.health)
+                {
+                    
+                    
+                }
+            }
+        }
+        return resultingViability;
+
+    }
+
+
+    private bool IsOnLand(Vector3 pos)
+    {
+        bool onLand = true;
+
+        float groundInfo = m_UsableGround.GetPixel((int)pos.x, (int)pos.z).r;
+        if(groundInfo <= m_SeaLevelCutOff)
+        {
+            onLand = false;
+        }
+        return onLand;
     }
 
     private bool IsCalculatedNewPosWithinTerrainBounds(Vector3 pos)
@@ -310,12 +370,24 @@ public class SeparatedSimulationManager : MonoBehaviour
         return success;
     }
 
-    private float CalculateSoilCompositionValue(Vector2 pos)
+    private float CalculateSoilCompositionValue(Vector2 pos, PlantSpeciesInfoScriptableObject plantSO)
     {
-        float soilViabilityValue = 0.0f;
-        float clayValue = GetValueFromSoilCompositionMap(m_ClayMap, pos);
-        //do a lot of calculations here about whether the plant likes the composition values or not
-        soilViabilityValue += clayValue;
+        float soilViabilityValue    = 0.0f;
+
+        //get the value from the ground and what the plant type prefers, then look how closely that factor matches up 
+        float clayValue             = GetValueFromSoilCompositionMap(m_ClayMap, pos);
+        float preferredClayValue    = plantSO.preferredClayValue;
+        float clayFactor            = CalculateFactorWithGroundValue(clayValue, preferredClayValue);
+
+        float sandValue             = GetValueFromSoilCompositionMap(m_SandMap, pos);
+        float preferredSandValue    = plantSO.preferredSandValue;
+        float sandFactor            = CalculateFactorWithGroundValue(sandValue, preferredSandValue);
+
+        float siltValue             = GetValueFromSoilCompositionMap(m_SiltMap, pos);
+        float preferredSiltValue    = plantSO.preferredSiltValue;
+        float siltFactor            = CalculateFactorWithGroundValue(siltValue, preferredSiltValue);
+
+        soilViabilityValue = (siltFactor + clayFactor + sandFactor) % 3.0f;
         return soilViabilityValue;
     }
 
