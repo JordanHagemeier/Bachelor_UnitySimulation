@@ -9,4 +9,6 @@ public struct GroundInfoStruct
     public float terrainOcclusion;
     public float waterflow;
     public float sand;
+    public float clay;
+    public float silt;
 }

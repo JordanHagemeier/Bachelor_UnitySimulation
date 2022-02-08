@@ -27,15 +27,24 @@ public class SeparatedSimulationManager : MonoBehaviour
     [SerializeField] private Texture2D m_SandMap;
     [SerializeField] private Texture2D m_SiltMap;
 
+    [SerializeField] private Texture2D m_ClayMapCopied;
+    private Texture2D m_SandMapCopied;
+    private Texture2D m_SiltMapCopied;
+
     [SerializeField] private float m_TimeTillOneYearIsOver;
     private float timer;
 
     private int m_IDCounter = 0;
 
+    [SerializeField] private Texture2D m_WritingTextureTest;
+    [SerializeField] private Texture2D m_WritingTextureTestCopy;
+
+    private List<Color> m_ToBeUploadedValues;
     
     [HideInInspector] public PlantInfoStruct[] copiedPlants;
     private VisualizationManager m_VisManager;
 
+    [SerializeField] private GroundInfoManager m_GroundInfoManager;
     CurrentPlantsSerializer plantSerializer = new CurrentPlantsSerializer();
     PlantSpeciesTable plantSpeciesTable = new PlantSpeciesTable();
 
@@ -63,6 +72,8 @@ public class SeparatedSimulationManager : MonoBehaviour
             plantSpeciesTable.AddToDictionary(plantSpecies[k].plantType, plantSpecies[k]);
         }
 
+        CreateCopiesOfTextures();
+
         //initialize first couple of trees in the list 
         InitializePlantInfos();
         m_AmountOfPlants = plants.Count;
@@ -83,6 +94,8 @@ public class SeparatedSimulationManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //CreateNewUploadTextureArrayForTick();
+        
         bool plantsAreUpdated = TickPlants();
         if (plantsAreUpdated == true)
         {
@@ -99,6 +112,10 @@ public class SeparatedSimulationManager : MonoBehaviour
 
         //"Tick Ground" needs further evaluation if it is even necessary or if I have enough data and research for correct soil behavior
         TickGround();
+        //UploadTextureArrayToTexture(m_WritingTextureTestCopy);
+        //UploadTextureArrayToTexture(m_ClayMapCopied);
+        //UploadTextureArrayToTexture(m_SandMapCopied);
+        //UploadTextureArrayToTexture(m_SiltMapCopied);
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -115,6 +132,11 @@ public class SeparatedSimulationManager : MonoBehaviour
             Debug.Log("Loaded!");
             Debug.Log(loadedPlants.currentPlantsInSim[0].id);
             Debug.Log(loadedPlants.currentPlantsInSim[0].health);
+        }
+
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            ReadRandomPlantValueOnMap(m_WritingTextureTestCopy);
         }
     }
    
@@ -246,7 +268,10 @@ public class SeparatedSimulationManager : MonoBehaviour
             Debug.LogError("Overall Viability is NaN");
             return -1.0f;
         }
-       
+
+        //WriteValueToNewTextureValueArrayTEST(m_WritingTextureTestCopy, currentPlantSO, new Vector2(plant.position.x, plant.position.z));
+        
+
         return overallViability;
 
        
@@ -370,22 +395,54 @@ public class SeparatedSimulationManager : MonoBehaviour
         return success;
     }
 
+    private float[] CalculateSoilCompositionValuesWithStaticMaps(Vector2 pos, PlantSpeciesInfoScriptableObject plantSO)
+    {
+        float[] values = new float[3];
+        float clayValue = GetValueFromSoilCompositionMap(m_ClayMap, pos);
+        float preferredClayValue = plantSO.preferredClayValue;
+        float clayFactor = CalculateFactorWithGroundValue(clayValue, preferredClayValue);
+
+        float sandValue = GetValueFromSoilCompositionMap(m_SandMap, pos);
+        float preferredSandValue = plantSO.preferredSandValue;
+        float sandFactor = CalculateFactorWithGroundValue(sandValue, preferredSandValue);
+
+        float siltValue = GetValueFromSoilCompositionMap(m_SiltMap, pos);
+        float preferredSiltValue = plantSO.preferredSiltValue;
+        float siltFactor = CalculateFactorWithGroundValue(siltValue, preferredSiltValue);
+
+        return values;
+    }
     private float CalculateSoilCompositionValue(Vector2 pos, PlantSpeciesInfoScriptableObject plantSO)
     {
         float soilViabilityValue    = 0.0f;
 
         //get the value from the ground and what the plant type prefers, then look how closely that factor matches up 
-        float clayValue             = GetValueFromSoilCompositionMap(m_ClayMap, pos);
-        float preferredClayValue    = plantSO.preferredClayValue;
-        float clayFactor            = CalculateFactorWithGroundValue(clayValue, preferredClayValue);
+        //float clayValue             = GetValueFromSoilCompositionMap(m_ClayMap, pos);
+        //float preferredClayValue    = plantSO.preferredClayValue;
+        //float clayFactor            = CalculateFactorWithGroundValue(clayValue, preferredClayValue);
 
-        float sandValue             = GetValueFromSoilCompositionMap(m_SandMap, pos);
-        float preferredSandValue    = plantSO.preferredSandValue;
-        float sandFactor            = CalculateFactorWithGroundValue(sandValue, preferredSandValue);
+        //float sandValue             = GetValueFromSoilCompositionMap(m_SandMap, pos);
+        //float preferredSandValue    = plantSO.preferredSandValue;
+        //float sandFactor            = CalculateFactorWithGroundValue(sandValue, preferredSandValue);
 
-        float siltValue             = GetValueFromSoilCompositionMap(m_SiltMap, pos);
-        float preferredSiltValue    = plantSO.preferredSiltValue;
-        float siltFactor            = CalculateFactorWithGroundValue(siltValue, preferredSiltValue);
+        //float siltValue             = GetValueFromSoilCompositionMap(m_SiltMap, pos);
+        //float preferredSiltValue    = plantSO.preferredSiltValue;
+        //float siltFactor            = CalculateFactorWithGroundValue(siltValue, preferredSiltValue);
+
+        float clayValue = GetValueFromSoilCompositionMap(m_ClayMapCopied, pos);
+        float preferredClayValue = plantSO.preferredClayValue;
+        float clayFactor = CalculateFactorWithGroundValue(clayValue, preferredClayValue);
+
+        float sandValue = GetValueFromSoilCompositionMap(m_SandMapCopied, pos);
+        float preferredSandValue = plantSO.preferredSandValue;
+        float sandFactor = CalculateFactorWithGroundValue(sandValue, preferredSandValue);
+
+        float siltValue = GetValueFromSoilCompositionMap(m_SiltMapCopied, pos);
+        float preferredSiltValue = plantSO.preferredSiltValue;
+        float siltFactor = CalculateFactorWithGroundValue(siltValue, preferredSiltValue);
+
+        //update each map on what was taken 
+        WriteValueToTexture(m_ClayMapCopied, plantSO.takenClayValue, clayValue, pos);
 
         soilViabilityValue = (siltFactor + clayFactor + sandFactor) % 3.0f;
         return soilViabilityValue;
@@ -395,12 +452,92 @@ public class SeparatedSimulationManager : MonoBehaviour
     {
         int posXOnTex = (int)((pos.x / m_Terrain.terrainData.bounds.max.x) * texture.width);
         int posYOnTex = (int)((pos.y / m_Terrain.terrainData.bounds.max.z) * texture.height);
-        var pixels = texture.GetPixels(posXOnTex, posYOnTex, 1,1);
-        float sumValue = 0.0f;
-        foreach(var pixel in pixels)
-        {
-            sumValue += pixel.r;
-        }
-        return (sumValue / pixels.Length) * 256.0f;
+        Color singlePixel = texture.GetPixel(posXOnTex, posYOnTex);
+        //var pixels = texture.GetPixels(posXOnTex, posYOnTex, 1,1);
+        ////float sumValue = 0.0f;
+        //float debugValue = 0.0f;
+        //foreach(var pixel in pixels)
+        //{
+        //    sumValue += pixel.r;
+        //    debugValue += pixel.g;
+        //}
+        //if((debugValue / pixels.Length)*256.0f != (sumValue / pixels.Length)*256.0f)
+        //{
+        //    Debug.Log("Original Value: " + (sumValue / pixels.Length) * 256.0f + ", Debug Value: " + (debugValue / pixels.Length) * 256.0f);
+        //}
+
+        //return (sumValue / pixels.Length) * 256.0f;
+        return singlePixel.r * 256.0f;
+    }
+    
+
+
+    private void CreateNewUploadTextureArrayForTick() 
+    {
+        m_ToBeUploadedValues = new List<Color>();
+    }
+
+    private void CreateCopiesOfTextures()
+    {
+        //TextureFormat format = m_WritingTextureTest.format;
+        //Vector2 size = new Vector2(m_WritingTextureTest.width, m_WritingTextureTest.height);
+        //m_WritingTextureTestCopy = new Texture2D(1024, 1024, format, false);
+
+        //format = m_ClayMap.format;
+
+        //m_ClayMapCopied = new Texture2D(1024, 1024, format, false);
+
+        //format = m_SiltMap.format;
+        //m_SiltMapCopied = new Texture2D(1024, 1024, format, false);
+
+        //format = m_SandMap.format;
+        //m_SandMapCopied = new Texture2D(1024, 1024, format, false);
+
+        m_ClayMapCopied             = InstantiateNewTexture(m_ClayMap);
+        m_SiltMapCopied             = InstantiateNewTexture(m_SiltMap);
+        m_SandMapCopied             = InstantiateNewTexture(m_SandMap);
+        m_WritingTextureTestCopy    = InstantiateNewTexture(m_WritingTextureTest);
+
+        Graphics.CopyTexture(m_WritingTextureTest, m_WritingTextureTestCopy);
+        Graphics.CopyTexture(m_ClayMap, m_ClayMapCopied);
+        Graphics.CopyTexture(m_SiltMap, m_SiltMapCopied);
+        Graphics.CopyTexture(m_SandMap, m_SandMapCopied);
+    }
+
+    private Texture2D InstantiateNewTexture(Texture2D oldTex)
+    {
+        TextureFormat format = oldTex.format;
+        Vector2 size = new Vector2(oldTex.width, oldTex.height);
+        Texture2D newTex = new Texture2D((int)size.x, (int)size.y, format, false);
+        return newTex;
+    }
+
+    private bool WriteValueToNewTextureValueArrayTEST(Texture2D texture,PlantSpeciesInfoScriptableObject plantInfo, Vector2 pos)
+    {
+        //write one new value into the array
+        Vector2 relativePosOnTexture = new Vector2((pos.x / 1024.0f) * texture.width, (pos.y / 1024.0f) * texture.height);
+        texture.SetPixel((int)relativePosOnTexture.x, (int)relativePosOnTexture.y, new Color(plantInfo.soilTakingTestValue / 256.0f, 0.0f, 0.0f));
+        m_ToBeUploadedValues.Add(new Color(plantInfo.soilTakingTestValue / 256.0f, 0.0f, 0.0f));
+        return true;
+    }
+
+    private bool WriteValueToTexture(Texture2D texture, float value, float foundValue, Vector2 pos)
+    {
+        Vector2 relativePosOnTexture = new Vector2((pos.x / 1024.0f) * texture.width, (pos.y / 1024.0f) * texture.height);
+        texture.SetPixel((int)relativePosOnTexture.x, (int)relativePosOnTexture.y, new Color(value / 256.0f, (foundValue * value) / 256.0f, (foundValue * value) / 256.0f));
+        return true;
+    }
+
+    private void UploadTextureArrayToTexture(Texture2D texture)
+    {
+        texture.Apply();
+    }
+
+    private void ReadRandomPlantValueOnMap(Texture2D texture)
+    {
+        PlantInfoStruct randomPlant = plants[Random.Range(0, plants.Count)];
+        
+        float value = GetValueFromSoilCompositionMap(texture, new Vector2(randomPlant.position.x, randomPlant.position.z));
+        Debug.Log("Read Value at: " + randomPlant.position.x + ", " + randomPlant.position.z + " and plantType " + randomPlant.type + " is " + value +".");
     }
 }
