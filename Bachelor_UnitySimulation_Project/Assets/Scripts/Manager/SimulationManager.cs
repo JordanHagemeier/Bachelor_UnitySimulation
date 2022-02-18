@@ -12,6 +12,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] private int                m_TerrainDivisionAmount;    public int          terrainDivisionAmount  { get { return m_TerrainDivisionAmount; } }
     [SerializeField] private float              m_GroundTemperature;        public float        groundTemperature { get { return m_GroundTemperature; } }
     [SerializeField] private float              m_HeightScalingFactor;      public float heightScalingFactor { get { return m_HeightScalingFactor; } }
+
     //TODO Mach die Chunks beim Seed Manager rein! Chunks, in denen eine bestimmte Anzahl an Seeds gespawned wird und mit denen du dann Listen füllen kannst, um nicht immer 
     //beim check auf "ist das im Radius von mir" gegen alle x tausend Seeds/Plants testen zu müssen!
 

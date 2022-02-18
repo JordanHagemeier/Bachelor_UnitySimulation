@@ -10,6 +10,26 @@ public enum PlantType
 {
     TestPlantA,
     TestPlantB,
+    Abies,
+    Alnus,
+    Betula,
+    Carpinus,
+    Castanea,
+    Conifers,
+    Eucalyptus,
+    Fagus,
+    Fraxinus,
+    Larix,
+    Broadleaved,
+    PinusMisc,
+    QuercusMisc,
+    Picea,
+    PinusPinaster,
+    PinusSylestris,
+    Populus,
+    PseudotsugaMenziesii,
+    QuercusRoburEtPetraea,
+    Robinia,
     Count
 }
 

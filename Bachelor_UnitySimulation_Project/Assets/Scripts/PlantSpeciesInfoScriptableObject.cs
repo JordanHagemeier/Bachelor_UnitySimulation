@@ -9,6 +9,7 @@ public class PlantSpeciesInfoScriptableObject : ScriptableObject
     [Header("Reproduction")]
     [SerializeField] private PlantType m_PlantType;             public PlantType plantType { get { return m_PlantType; } }
     [SerializeField] private GameObject m_OwnSpeciesPrefab;     public GameObject ownSpeciesPrefab { get { return m_OwnSpeciesPrefab; } }
+    [SerializeField] private Material m_OwnMaterial;            public Material ownMaterial { get { return m_OwnMaterial; } }
     [SerializeField] private int m_MaturityAge;                 public int maturityAge { get { return m_MaturityAge; } }
     private float m_AgeBasedGrowthFactor;                       public float ageBasedGrowthFactor { get { return m_AgeBasedGrowthFactor; } }
     [SerializeField] private int m_DeathAge;                    public int deathAge { get { return m_DeathAge; } }
@@ -28,14 +29,15 @@ public class PlantSpeciesInfoScriptableObject : ScriptableObject
 
     [SerializeField] private float m_SoilCompositionWeight; public float soilCompositionWeight { get { return m_SoilCompositionWeight; } }
     [SerializeField] private float m_PreferredClayValue; public float preferredClayValue { get { return m_PreferredClayValue; } }
-    [SerializeField] private float m_PreferredSandValue; public float preferredSandValue { get { return m_PreferredSandValue; } }
     [SerializeField] private float m_PreferredSiltValue; public float preferredSiltValue { get { return m_PreferredSiltValue; } }
+    [SerializeField] private float m_PreferredSandValue; public float preferredSandValue { get { return m_PreferredSandValue; } }
 
     [SerializeField] private float m_TakenClayValue; public float takenClayValue { get { return m_TakenClayValue; } }
     [SerializeField] private float m_TakenSandValue; public float takenSandValue { get { return m_TakenSandValue; } }
     [SerializeField] private float m_TakenSiltValue; public float takenSiltValue { get { return m_TakenSiltValue; } }
 
-    [SerializeField] private float m_SoilTakingTestValue; public float soilTakingTestValue { get { return m_SoilTakingTestValue; } }
+    [SerializeField] private float m_SoilTakingTestValue;   public float soilTakingTestValue { get { return m_SoilTakingTestValue; } }
+    [SerializeField] private float m_PersistenceValue;      public float persistenceValue { get { return m_PersistenceValue; } }
     //Viability 
     //We have altitude, occlusion, flow & soil composition
     //each species should probably have own specifics for each of these values on what it needs and how important it is

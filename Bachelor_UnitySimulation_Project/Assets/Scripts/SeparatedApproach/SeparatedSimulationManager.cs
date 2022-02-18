@@ -7,10 +7,19 @@ using System.IO;
 
 public class SeparatedSimulationManager : MonoBehaviour
 {
-    
-    private List<PlantInfoStruct> plants;
+    [Header ("Simulation Meta Data")]
+    [SerializeField] private int m_SimulationSeed;
+    [SerializeField] private int m_SimulationAmount;
+    [SerializeField] private int m_CurrentSimCounter = 0;
+    [SerializeField] private int m_IterationsPerSimulation;
+    private int m_CurrentIterationCounter = 0;
+    [SerializeField] private float m_TimeTillOneYearIsOver;
+    [SerializeField] private float timer;
+
+    [Header ("Plant Information")]
+    [SerializeField] private List<PlantInfoStruct> m_Plants;
     [SerializeField] private int m_AmountOfPlants;
-    [SerializeField] private GroundInfoStruct[,] ground;
+
 
 
     [SerializeField] private int m_InitialPlantAmount;
@@ -27,37 +36,57 @@ public class SeparatedSimulationManager : MonoBehaviour
     [SerializeField] private Texture2D m_SandMap;
     [SerializeField] private Texture2D m_SiltMap;
 
-    [SerializeField] private Texture2D m_ClayMapCopied;
-    private Texture2D m_SandMapCopied;
-    private Texture2D m_SiltMapCopied;
-
-    [SerializeField] private float m_TimeTillOneYearIsOver;
-    private float timer;
 
     private int m_IDCounter = 0;
 
     [SerializeField] private Texture2D m_WritingTextureTest;
     [SerializeField] private Texture2D m_WritingTextureTestCopy;
 
-    private List<Color> m_ToBeUploadedValues;
     
-    [HideInInspector] public PlantInfoStruct[] copiedPlants;
+    [HideInInspector] public PlantInfoStruct[] m_CopiedPlants;
     private VisualizationManager m_VisManager;
 
     [SerializeField] private GroundInfoManager m_GroundInfoManager;
     CurrentPlantsSerializer plantSerializer = new CurrentPlantsSerializer();
-    PlantSpeciesTable plantSpeciesTable = new PlantSpeciesTable();
+    [HideInInspector] public PlantSpeciesTable plantSpeciesTable = new PlantSpeciesTable();
 
 
 
     // Start is called before the first frame update
     void Start()
     {
-        if(m_FlowMap == null)
+        Random.InitState(m_SimulationSeed);
+        StartUpMetaInformation();
+        ResetSimulation(m_CurrentSimCounter);
+      
+    }
+
+    private bool ResetSimulation(int iteration)
+    {
+        bool success = true;
+        if(m_CurrentSimCounter > m_SimulationAmount)
+        {
+            Debug.Break();
+        }
+        //Give new seed 
+        //Reset Data from previous run
+        //  - new plants, spawned at new locations due to new seed
+        //  - restore old ground array 
+        //Start new Sim
+        Random.InitState(m_SimulationSeed + (42 * iteration));
+        InitializePlantInfos();
+        m_GroundInfoManager.ResetGroundInfoArray();
+
+        return success;
+    }
+
+    private void StartUpMetaInformation()
+    {
+        if (m_FlowMap == null)
         {
             m_FlowMap = Singletons.simulationManager.flowMap;
         }
-        if(m_OcclusionMap == null)
+        if (m_OcclusionMap == null)
         {
             m_OcclusionMap = Singletons.simulationManager.occlusionMap;
         }
@@ -67,56 +96,61 @@ public class SeparatedSimulationManager : MonoBehaviour
 
 
         //create a dictionary of plant type enums to plant type scriptable objects, to enable deserialization of plant info structs
-        for(int k = 0; k < plantSpecies.Length; k++)
+        for (int k = 0; k < plantSpecies.Length; k++)
         {
             plantSpeciesTable.AddToDictionary(plantSpecies[k].plantType, plantSpecies[k]);
         }
-
-        CreateCopiesOfTextures();
-
-        //initialize first couple of trees in the list 
-        InitializePlantInfos();
-        m_AmountOfPlants = plants.Count;
-        //fill ground info structs with data about their pixel position
-        InitializeGroundInfos();
     }
 
     private void CopyPlantInfosToVisPlantArray(List<PlantInfoStruct> plantsToBeCopied)
     {
-        copiedPlants = new PlantInfoStruct[plantsToBeCopied.Count];
+        m_CopiedPlants = new PlantInfoStruct[plantsToBeCopied.Count];
         for (int i = 0; i < plantsToBeCopied.Count; i++)
         {
-            copiedPlants[i] = plantsToBeCopied[i];
+            m_CopiedPlants[i] = plantsToBeCopied[i];
         }
-        m_VisManager.copiedPlants = copiedPlants;
+        m_VisManager.copiedPlants = m_CopiedPlants;
     }
 
     // Update is called once per frame
     void Update()
     {
-        //CreateNewUploadTextureArrayForTick();
-        
-        bool plantsAreUpdated = TickPlants();
-        if (plantsAreUpdated == true)
+       
+        timer += Time.deltaTime;
+        if (timer > m_TimeTillOneYearIsOver)
         {
+            timer = 0.0f;
 
-            CopyPlantInfosToVisPlantArray(plants);
 
-            plantSerializer.currentPlantsInSim = new List<PlantInfoStruct>();
-            for(int k = 0; k < copiedPlants.Length; k++)
+            if (m_CurrentIterationCounter > m_IterationsPerSimulation)
             {
-                plantSerializer.currentPlantsInSim.Add(copiedPlants[k]);
+                m_CurrentIterationCounter = 0;
+                m_CurrentSimCounter++;
+                ResetSimulation(m_CurrentSimCounter);
+                return;
             }
-            
+
+            bool plantsAreUpdated = TickPlants();
+            if (plantsAreUpdated == true)
+            {
+
+                CopyPlantInfosToVisPlantArray(m_Plants);
+
+                plantSerializer.currentPlantsInSim = new List<PlantInfoStruct>();
+                for (int k = 0; k < m_CopiedPlants.Length; k++)
+                {
+                    plantSerializer.currentPlantsInSim.Add(m_CopiedPlants[k]);
+                }
+
+            }
+
+            CheckForInput();
+            m_CurrentIterationCounter++;
         }
+    }
 
-        //"Tick Ground" needs further evaluation if it is even necessary or if I have enough data and research for correct soil behavior
-        TickGround();
-        //UploadTextureArrayToTexture(m_WritingTextureTestCopy);
-        //UploadTextureArrayToTexture(m_ClayMapCopied);
-        //UploadTextureArrayToTexture(m_SandMapCopied);
-        //UploadTextureArrayToTexture(m_SiltMapCopied);
-
+    private void CheckForInput()
+    {
         if (Input.GetMouseButtonDown(0))
         {
             plantSerializer.Save(Path.Combine(Application.dataPath, "monsters.xml"));
@@ -125,10 +159,10 @@ public class SeparatedSimulationManager : MonoBehaviour
         if (Input.GetMouseButtonDown(1))
         {
             var loadedPlants = CurrentPlantsSerializer.Load(Path.Combine(Application.dataPath, "monsters.xml"));
-            plants = loadedPlants.currentPlantsInSim;
-            CopyPlantInfosToVisPlantArray(plants);
+            m_Plants = loadedPlants.currentPlantsInSim;
+            CopyPlantInfosToVisPlantArray(m_Plants);
 
-            plantsAreUpdated = true;
+            //plantsAreUpdated = true;
             Debug.Log("Loaded!");
             Debug.Log(loadedPlants.currentPlantsInSim[0].id);
             Debug.Log(loadedPlants.currentPlantsInSim[0].health);
@@ -140,12 +174,12 @@ public class SeparatedSimulationManager : MonoBehaviour
         }
     }
    
-
     private void InitializePlantInfos()
     {
-        plants = new List<PlantInfoStruct>();
+        m_Plants = new List<PlantInfoStruct>();
         for(int i = 0; i < m_InitialPlantAmount; i++)
         {
+            
             Bounds terrainBounds = Singletons.simulationManager.terrain.terrainData.bounds;
             //get random position on terrain 
             Vector3 randomPos   = new Vector3(Random.Range(terrainBounds.min.x, terrainBounds.max.x), 0.0f, Random.Range(terrainBounds.min.z, terrainBounds.max.z));
@@ -158,48 +192,28 @@ public class SeparatedSimulationManager : MonoBehaviour
             //initialize new plant with that position 
             m_IDCounter++;
             PlantInfoStruct newPlant = new PlantInfoStruct(randomPos, m_IDCounter, plantSpecies[Random.Range(0, plantSpecies.Length)]);
-            plants.Add(newPlant);
+            m_Plants.Add(newPlant);
         }
+
+        m_AmountOfPlants = m_Plants.Count;
     }
     
-    private void InitializeGroundInfos()
-    {
-        ground = new GroundInfoStruct[1024, 1024];
-        for(int i = 0; i < ground.GetLength(0); i++)
-        {
-            for(int j = 0; j < ground.Length / ground.GetLength(0); j++)
-            {
-                GroundInfoStruct newGroundPixel = new GroundInfoStruct();
-                newGroundPixel.terrainOcclusion = CalculateGroundValueWithMap(m_OcclusionMap, new Vector2(i, j));
-                newGroundPixel.waterflow        = CalculateGroundValueWithMap(m_FlowMap, new Vector2(i, j));
-                ground[i, j] = newGroundPixel;
-
-               // Debug.Log(i + ", " + j);
-            }
-        }
-    }
     private bool TickPlants()
     {
         bool success = false;
-        timer += Time.deltaTime;
-        if (timer > m_TimeTillOneYearIsOver)
+        for (int i = 0; i < m_Plants.Count; i++)
         {
-            timer = 0.0f;
-
-
-            for (int i = 0; i < plants.Count; i++)
+            m_Plants[i].age++;
+            if (CheckIfPlantIsAlive(m_Plants[i]))
             {
-                plants[i].age++;
-                if (CheckIfPlantIsAlive(plants[i]))
-                {
-                    plants[i].health = CalculateViability(plants[i]);
-                    CheckIfPlantCanReproduce(plants[i]);
+                m_Plants[i].health = CalculateViability(m_Plants[i]);
+                CheckIfPlantCanReproduce(m_Plants[i]);
 
-                }
             }
-            m_AmountOfPlants = plants.Count;
-            success = true;
         }
+        m_AmountOfPlants = m_Plants.Count;
+        success = true;
+        
         //for each plant in plants List:
         //  - calculate viability
         //  - calculate death 
@@ -217,7 +231,9 @@ public class SeparatedSimulationManager : MonoBehaviour
             //might have to unregister from the seed manager, but I will look into that later
             //PlantDies();
             isAlive = false;
-            plants.Remove(plant);
+            m_Plants.Remove(plant);
+
+            //TODO implement soil replenishment after death based on data from the plant 
             return isAlive;
             
         }
@@ -252,8 +268,9 @@ public class SeparatedSimulationManager : MonoBehaviour
        
         float groundFlowFactor      = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain((int)plant.position.x, (int)plant.position.z, terrainBounds).waterflow;
         float flowFactor            = CalculateFactorWithGroundValue(groundFlowFactor, currentPlantSO.optimalflow);
-        //float occlusionFactor_OLD = CalculateFactorWithMap(Singletons.simulationManager.occlusionMap, plant.plantSpeciesInfo.optimalOcclusion, plant);
-        //float flowFactor_OLD = CalculateFactorWithMap(Singletons.simulationManager.flowMap, plant.plantSpeciesInfo.optimalflow, plant);
+
+
+        //TODO change this one from local ground to ground array and implement changes to ground values in it
         float soilCompositionValue      = CalculateSoilCompositionValue(new Vector2((int)plant.position.x, (int)plant.position.z), currentPlantSO);
         
 
@@ -277,14 +294,14 @@ public class SeparatedSimulationManager : MonoBehaviour
             return -1.0f;
         }
 
-        //WriteValueToNewTextureValueArrayTEST(m_WritingTextureTestCopy, currentPlantSO, new Vector2(plant.position.x, plant.position.z));
-        
+
+        //TODO check for other plants and reduce viability value if other plants are in the area
+        overallViability = AffectedViabilityThroughProximity(plant, overallViability);
 
         return overallViability;
 
        
     }
-
 
     private void ScatterSeeds(PlantInfoStruct plant)
     {
@@ -299,7 +316,7 @@ public class SeparatedSimulationManager : MonoBehaviour
             {
                 m_IDCounter++;
                 PlantInfoStruct newPlant = new PlantInfoStruct(calculatedPos, m_IDCounter, currentPlantSO);
-                plants.Add(newPlant);
+                m_Plants.Add(newPlant);
                 
             }
 
@@ -307,12 +324,11 @@ public class SeparatedSimulationManager : MonoBehaviour
        
     }
 
-
     private bool IsWithinDistanceToOthers(Vector3 pos)
     {
 
         bool withinRad = false;
-        foreach(PlantInfoStruct plant in plants)
+        foreach(PlantInfoStruct plant in m_Plants)
         {
             
             float distance = Vector2.SqrMagnitude(new Vector2(pos.x - plant.position.x, pos.z - plant.position.z));
@@ -325,23 +341,20 @@ public class SeparatedSimulationManager : MonoBehaviour
         return withinRad;
     }
 
-    private float AffectedViabilityThroughProximity(PlantInfoStruct givenPlant)
+    private float AffectedViabilityThroughProximity(PlantInfoStruct givenPlant, float calculatedViability)
     {
         int countOfTreesInProximity = 0;
 
-        float resultingViability = givenPlant.health;
-        foreach(PlantInfoStruct plant in plants)
+        foreach(PlantInfoStruct plant in m_Plants)
         {
             float distance = Vector2.SqrMagnitude(new Vector2(givenPlant.position.x - plant.position.x, givenPlant.position.z - plant.position.z));
             if (distance < m_DistanceBetweenTrees * m_DistanceBetweenTrees)
             {
-                if(givenPlant.health > plant.health)
-                {
-                    
-                    
-                }
+                countOfTreesInProximity++;
             }
         }
+        PlantSpeciesInfoScriptableObject currentPlantSO = plantSpeciesTable.GetSOByType(givenPlant.type);
+        float resultingViability = calculatedViability - ((1.0f - currentPlantSO.persistenceValue) * countOfTreesInProximity); 
         return resultingViability;
 
     }
@@ -349,14 +362,10 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private bool IsOnLand(Vector3 pos)
     {
-        bool onLand = true;
-
-        float groundInfo = m_UsableGround.GetPixel((int)pos.x, (int)pos.z).r;
-        if(groundInfo <= m_SeaLevelCutOff)
-        {
-            onLand = false;
-        }
-        return onLand;
+       
+        Vector2 terrainBounds = new Vector2(m_Terrain.terrainData.bounds.max.x, m_Terrain.terrainData.bounds.max.z);
+        return m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain((int)pos.x, (int)pos.z, terrainBounds).onLand;
+        
     }
 
     private bool IsCalculatedNewPosWithinTerrainBounds(Vector3 pos)
@@ -379,22 +388,13 @@ public class SeparatedSimulationManager : MonoBehaviour
         return Mathf.Clamp01((1.0f - Mathf.Abs(1.0f - (temperatureAtHeight / wantedTemperature))));
     }
 
-    private float CalculateFactorWithMap(Texture2D map, float wantedValue, PlantInfoStruct plant)
-    {
-        Color mapColorsAtPosition = map.GetPixel((int)plant.position.x, 1 - (int)plant.position.z);
-        return Mathf.Clamp01((1.0f - Mathf.Abs(1.0f - (mapColorsAtPosition.r / wantedValue))));
-    }
-
+   
     private float CalculateFactorWithGroundValue(float groundValue, float wantedValue)
     {
         return Mathf.Clamp01((1.0f - Mathf.Abs(1.0f - (groundValue / wantedValue))));
     }
 
-    private float CalculateGroundValueWithMap(Texture2D map, Vector2 pos)
-    {
-        return map.GetPixel((int)pos.x, 1 - (int)pos.y).r;
-    }
-
+  
 
     public bool TickGround()
     {
@@ -420,10 +420,11 @@ public class SeparatedSimulationManager : MonoBehaviour
 
         return values;
     }
+
     private float CalculateSoilCompositionValue(Vector2 pos, PlantSpeciesInfoScriptableObject plantSO)
     {
         float soilViabilityValue    = 0.0f;
-
+        Vector2 terrainBounds = new Vector2(m_Terrain.terrainData.bounds.max.x, m_Terrain.terrainData.bounds.max.z); 
         //get the value from the ground and what the plant type prefers, then look how closely that factor matches up 
         //float clayValue             = GetValueFromSoilCompositionMap(m_ClayMap, pos);
         //float preferredClayValue    = plantSO.preferredClayValue;
@@ -437,22 +438,39 @@ public class SeparatedSimulationManager : MonoBehaviour
         //float preferredSiltValue    = plantSO.preferredSiltValue;
         //float siltFactor            = CalculateFactorWithGroundValue(siltValue, preferredSiltValue);
 
-        float clayValue = GetValueFromSoilCompositionMap(m_ClayMapCopied, pos);
-        float preferredClayValue = plantSO.preferredClayValue;
-        float clayFactor = CalculateFactorWithGroundValue(clayValue, preferredClayValue);
 
-        float sandValue = GetValueFromSoilCompositionMap(m_SandMapCopied, pos);
-        float preferredSandValue = plantSO.preferredSandValue;
-        float sandFactor = CalculateFactorWithGroundValue(sandValue, preferredSandValue);
 
-        float siltValue = GetValueFromSoilCompositionMap(m_SiltMapCopied, pos);
-        float preferredSiltValue = plantSO.preferredSiltValue;
-        float siltFactor = CalculateFactorWithGroundValue(siltValue, preferredSiltValue);
 
+        //float clayValue = GetValueFromSoilCompositionMap(m_ClayMapCopied, pos);
+        //float preferredClayValue = plantSO.preferredClayValue;
+        //float clayFactor = CalculateFactorWithGroundValue(clayValue, preferredClayValue);
+
+        //float sandValue = GetValueFromSoilCompositionMap(m_SandMapCopied, pos);
+        //float preferredSandValue = plantSO.preferredSandValue;
+        //float sandFactor = CalculateFactorWithGroundValue(sandValue, preferredSandValue);
+
+        //float siltValue = GetValueFromSoilCompositionMap(m_SiltMapCopied, pos);
+        //float preferredSiltValue = plantSO.preferredSiltValue;
+        //float siltFactor = CalculateFactorWithGroundValue(siltValue, preferredSiltValue);
+
+
+
+        //ground info array version 
+        float clayValueFromGround               = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, terrainBounds).clay;
+        float preferredClayValueFromGround      = plantSO.preferredClayValue;
+        float clayFactorFromGround              = CalculateFactorWithGroundValue(clayValueFromGround, preferredClayValueFromGround);
+
+        float sandValueFromGround               = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, terrainBounds).sand;
+        float preferredSandValueFromGround      = plantSO.preferredSandValue;
+        float sandFactorFromGround              = CalculateFactorWithGroundValue(sandValueFromGround, preferredSandValueFromGround);
+
+        float siltValueFromGround               = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, terrainBounds).silt;
+        float preferredSiltValueFromGround      = plantSO.preferredSiltValue;
+        float siltFactorFromGround              = CalculateFactorWithGroundValue(siltValueFromGround, preferredSiltValueFromGround);
         //update each map on what was taken 
-        WriteValueToTexture(m_ClayMapCopied, plantSO.takenClayValue, clayValue, pos);
+        //WriteValueToTexture(m_ClayMapCopied, plantSO.takenClayValue, clayValue, pos);
 
-        soilViabilityValue = (siltFactor + clayFactor + sandFactor) % 3.0f;
+        soilViabilityValue = (clayFactorFromGround + sandFactorFromGround + siltFactorFromGround) % 3.0f;
         return soilViabilityValue;
     }
 
@@ -478,72 +496,10 @@ public class SeparatedSimulationManager : MonoBehaviour
         return singlePixel.r * 256.0f;
     }
     
-
-
-    private void CreateNewUploadTextureArrayForTick() 
-    {
-        m_ToBeUploadedValues = new List<Color>();
-    }
-
-    private void CreateCopiesOfTextures()
-    {
-        //TextureFormat format = m_WritingTextureTest.format;
-        //Vector2 size = new Vector2(m_WritingTextureTest.width, m_WritingTextureTest.height);
-        //m_WritingTextureTestCopy = new Texture2D(1024, 1024, format, false);
-
-        //format = m_ClayMap.format;
-
-        //m_ClayMapCopied = new Texture2D(1024, 1024, format, false);
-
-        //format = m_SiltMap.format;
-        //m_SiltMapCopied = new Texture2D(1024, 1024, format, false);
-
-        //format = m_SandMap.format;
-        //m_SandMapCopied = new Texture2D(1024, 1024, format, false);
-
-        m_ClayMapCopied             = InstantiateNewTexture(m_ClayMap);
-        m_SiltMapCopied             = InstantiateNewTexture(m_SiltMap);
-        m_SandMapCopied             = InstantiateNewTexture(m_SandMap);
-        m_WritingTextureTestCopy    = InstantiateNewTexture(m_WritingTextureTest);
-
-        Graphics.CopyTexture(m_WritingTextureTest, m_WritingTextureTestCopy);
-        Graphics.CopyTexture(m_ClayMap, m_ClayMapCopied);
-        Graphics.CopyTexture(m_SiltMap, m_SiltMapCopied);
-        Graphics.CopyTexture(m_SandMap, m_SandMapCopied);
-    }
-
-    private Texture2D InstantiateNewTexture(Texture2D oldTex)
-    {
-        TextureFormat format = oldTex.format;
-        Vector2 size = new Vector2(oldTex.width, oldTex.height);
-        Texture2D newTex = new Texture2D((int)size.x, (int)size.y, format, false);
-        return newTex;
-    }
-
-    private bool WriteValueToNewTextureValueArrayTEST(Texture2D texture,PlantSpeciesInfoScriptableObject plantInfo, Vector2 pos)
-    {
-        //write one new value into the array
-        Vector2 relativePosOnTexture = new Vector2((pos.x / 1024.0f) * texture.width, (pos.y / 1024.0f) * texture.height);
-        texture.SetPixel((int)relativePosOnTexture.x, (int)relativePosOnTexture.y, new Color(plantInfo.soilTakingTestValue / 256.0f, 0.0f, 0.0f));
-        m_ToBeUploadedValues.Add(new Color(plantInfo.soilTakingTestValue / 256.0f, 0.0f, 0.0f));
-        return true;
-    }
-
-    private bool WriteValueToTexture(Texture2D texture, float value, float foundValue, Vector2 pos)
-    {
-        Vector2 relativePosOnTexture = new Vector2((pos.x / 1024.0f) * texture.width, (pos.y / 1024.0f) * texture.height);
-        texture.SetPixel((int)relativePosOnTexture.x, (int)relativePosOnTexture.y, new Color(value / 256.0f, (foundValue * value) / 256.0f, (foundValue * value) / 256.0f));
-        return true;
-    }
-
-    private void UploadTextureArrayToTexture(Texture2D texture)
-    {
-        texture.Apply();
-    }
-
+   
     private void ReadRandomPlantValueOnMap(Texture2D texture)
     {
-        PlantInfoStruct randomPlant = plants[Random.Range(0, plants.Count)];
+        PlantInfoStruct randomPlant = m_Plants[Random.Range(0, m_Plants.Count)];
         
         float value = GetValueFromSoilCompositionMap(texture, new Vector2(randomPlant.position.x, randomPlant.position.z));
         Debug.Log("Read Value at: " + randomPlant.position.x + ", " + randomPlant.position.z + " and plantType " + randomPlant.type + " is " + value +".");
