@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Pinus_Pinaster
   m_EditorClassIdentifier: 
   m_PlantType: 16
-  m_OwnSpeciesPrefab: {fileID: 0}
-  m_OwnMaterial: {fileID: 0}
+  m_OwnSpeciesPrefab: {fileID: 2805257265314284349, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
+  m_OwnMaterial: {fileID: 2100000, guid: b2ae8c08dd1f2ac44a5bc77d2c5587bc, type: 2}
+  m_TypeColor: {r: 0.70931387, g: 0, b: 1, a: 1}
   m_MaturityAge: 10
   m_DeathAge: 100
+  m_MaxSize: 1
   m_SeedDistributionAmount: 1
   m_MaxDistributionDistance: 50
   m_OptimalOcclusion: 0.2
@@ -25,12 +27,10 @@ MonoBehaviour:
   m_FlowFactorWeight: 0.7
   m_OptimalTemperature: 18
   m_TemperatureWeight: 0.8
-  m_SoilCompositionWeight: 0.5
+  m_SoilTextureWeight: 0
   m_PreferredClayValue: 0.2
   m_PreferredSiltValue: 0.4
   m_PreferredSandValue: 0.4
-  m_TakenClayValue: 0
-  m_TakenSandValue: 0
-  m_TakenSiltValue: 0
-  m_SoilTakingTestValue: 0
+  m_m_SoilCompositionWeight: 0.4
+  m_PreferredAcidityValue: 6.3
   m_PersistenceValue: 0.5

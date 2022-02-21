@@ -13,10 +13,12 @@ MonoBehaviour:
   m_Name: Abies
   m_EditorClassIdentifier: 
   m_PlantType: 2
-  m_OwnSpeciesPrefab: {fileID: 0}
-  m_OwnMaterial: {fileID: 2100000, guid: d945c681c4504df439962c1a6f33d8af, type: 2}
+  m_OwnSpeciesPrefab: {fileID: 2805257265314284349, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
+  m_OwnMaterial: {fileID: 2100000, guid: b2ae8c08dd1f2ac44a5bc77d2c5587bc, type: 2}
+  m_TypeColor: {r: 1, g: 0, b: 0, a: 1}
   m_MaturityAge: 35
   m_DeathAge: 550
+  m_MaxSize: 1
   m_SeedDistributionAmount: 1
   m_MaxDistributionDistance: 50
   m_OptimalOcclusion: 0.5
@@ -25,12 +27,10 @@ MonoBehaviour:
   m_FlowFactorWeight: 0.8
   m_OptimalTemperature: 16
   m_TemperatureWeight: 0.5
-  m_SoilCompositionWeight: 0.4
+  m_SoilTextureWeight: 0
   m_PreferredClayValue: 0.3
   m_PreferredSiltValue: 0.3
   m_PreferredSandValue: 0.3
-  m_TakenClayValue: 0
-  m_TakenSandValue: 0
-  m_TakenSiltValue: 0
-  m_SoilTakingTestValue: 0
+  m_m_SoilCompositionWeight: 0.5
+  m_PreferredAcidityValue: 5.5
   m_PersistenceValue: 0.8

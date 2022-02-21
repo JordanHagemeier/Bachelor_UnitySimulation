@@ -54,7 +54,8 @@ public class PlantInfoStruct
     [XmlAttribute("Age")]
     public int age;
     [XmlAttribute("Health")]
-    public float health;
+    public float health; // from 0 to 1
+
 
     public int id;
     public PlantType type;

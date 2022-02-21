@@ -13,23 +13,24 @@ MonoBehaviour:
   m_Name: Populus
   m_EditorClassIdentifier: 
   m_PlantType: 18
-  m_OwnSpeciesPrefab: {fileID: 0}
+  m_OwnSpeciesPrefab: {fileID: 2805257265314284349, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
+  m_OwnMaterial: {fileID: 2100000, guid: b2ae8c08dd1f2ac44a5bc77d2c5587bc, type: 2}
+  m_TypeColor: {r: 0.745283, g: 0, b: 0.4237883, a: 1}
   m_MaturityAge: 9
   m_DeathAge: 75
-  m_SeedDistributionAmount: 0
-  m_MaxDistributionDistance: 0
+  m_MaxSize: 1
+  m_SeedDistributionAmount: 1
+  m_MaxDistributionDistance: 50
   m_OptimalOcclusion: 0.3
   m_OcclusionFactorWeight: 0.7
   m_OptimalFlow: 0.5
   m_FlowFactorWeight: 0.2
   m_OptimalTemperature: 11
   m_TemperatureWeight: 0.1
-  m_SoilCompositionWeight: 0.2
+  m_SoilTextureWeight: 0
   m_PreferredClayValue: 0.3
   m_PreferredSiltValue: 0.3
   m_PreferredSandValue: 0.3
-  m_TakenClayValue: 0
-  m_TakenSandValue: 0
-  m_TakenSiltValue: 0
-  m_SoilTakingTestValue: 0
+  m_m_SoilCompositionWeight: 0.6
+  m_PreferredAcidityValue: 6.5
   m_PersistenceValue: 0.8

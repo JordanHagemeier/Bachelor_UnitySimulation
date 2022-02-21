@@ -4,16 +4,21 @@ using UnityEngine;
 
 public class GroundInfoManager : MonoBehaviour
 {
+    [Header("Soil Maps")]
     [SerializeField] private Texture2D m_FlowMap;
     [SerializeField] private Texture2D m_OcclusionMap;
     [SerializeField] private Texture2D m_ClayMap;
     [SerializeField] private Texture2D m_SandMap;
     [SerializeField] private Texture2D m_SiltMap;
+    [SerializeField] private Texture2D m_SoilAcidityMap;
 
+    [Header("Max Values for each Map")]
     [SerializeField] private float m_MaxValueClay;
     [SerializeField] private float m_MaxValueSand;
     [SerializeField] private float m_MaxValueSilt;
+    [SerializeField] private float m_MaxPH;
 
+    [Header("Everything else")]
     [SerializeField] private Texture2D m_LandMass;
     [SerializeField] private float m_SeaLevelCutOff;
 
@@ -28,7 +33,7 @@ public class GroundInfoManager : MonoBehaviour
     private GroundInfoStruct[] m_GroundInfoStructArrayCOPY;
     private bool m_ResetGroundInfoArray = false;
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         m_GroundInfoStructArray         = new GroundInfoStruct[(int)m_mapWidth * (int)m_mapHeight];
         m_GroundInfoStructArrayCOPY     = new GroundInfoStruct[m_GroundInfoStructArray.Length];
@@ -92,11 +97,11 @@ public class GroundInfoManager : MonoBehaviour
         {
             for(int j = 0; j < m_mapHeight; j++)
             {
-                float percentage = i / m_mapWidth;
-                int pixelPosXOnMap = (int) (percentage * m_ClayMap.width);
+                float percentageX = i / m_mapWidth;
+                int pixelPosXOnMap = (int) (percentageX * m_ClayMap.width);
 
-                percentage = j / m_mapHeight;
-                int pixelPosYOnMap = (int)(percentage * m_ClayMap.height);
+                float percentageY = j / m_mapHeight;
+                int pixelPosYOnMap = (int)(percentageY * m_ClayMap.height);
 
 
                 int currentInfo = (i * (int)m_mapHeight) + j;
@@ -112,14 +117,19 @@ public class GroundInfoManager : MonoBehaviour
                 
                 //these maps should be smaller and need new pixel positions
                 //TODO
-                float percentageSmall = i / m_mapWidth;
-                int pixelPosXOnMapSmall = (int)(percentageSmall * m_OcclusionMap.width);
+               
+                int pixelPosXOnMapSmall = (int)(percentageX * m_OcclusionMap.width);
 
-                percentageSmall = j / m_mapHeight;
-                int pixelPosYOnMapSmall = (int)(percentageSmall * m_OcclusionMap.height);
+               
+                int pixelPosYOnMapSmall = (int)(percentageY * m_OcclusionMap.height);
 
                 m_GroundInfoStructArray[currentInfo].terrainOcclusion   = m_OcclusionMap.GetPixel(pixelPosXOnMapSmall, pixelPosYOnMapSmall).r;
                 m_GroundInfoStructArray[currentInfo].waterflow          = m_FlowMap.GetPixel(pixelPosXOnMapSmall,pixelPosYOnMapSmall).r;
+
+               
+                int pixelPosXOnMapPH = (int)(percentageX * m_SoilAcidityMap.width);
+                int pixelPosYOnMapPH = (int)(percentageY * m_SoilAcidityMap.height);
+                m_GroundInfoStructArray[currentInfo].ph                 = (m_SoilAcidityMap.GetPixel(pixelPosXOnMapPH, pixelPosYOnMapPH).r * 256.0f) / m_MaxPH;
 
                 m_GroundInfoStructArray[currentInfo].onLand = false;
 
@@ -130,7 +140,7 @@ public class GroundInfoManager : MonoBehaviour
                 perc = j / m_mapHeight;
                 int pixelposY = (int)(perc * m_LandMass.height);
                 float landValue = m_LandMass.GetPixel(pixelposX, pixelposY).r;
-                m_GroundInfoStructArray[currentInfo].DEBUGLandValue = landValue;
+                //m_GroundInfoStructArray[currentInfo].DEBUGLandValue = landValue;
                 if (landValue > m_SeaLevelCutOff)
                 {
                     m_GroundInfoStructArray[currentInfo].onLand = true;
@@ -139,7 +149,7 @@ public class GroundInfoManager : MonoBehaviour
             }
             
         }
-        SetupDebuggingObjects((int)m_mapHeight, (int)m_mapWidth);
+        //SetupDebuggingObjects((int)m_mapHeight, (int)m_mapWidth);
 
 
     }
@@ -174,7 +184,7 @@ public class GroundInfoManager : MonoBehaviour
             float xPercentage = 1.0f / (width - 1) * column; // col / (width -1)
             float yPercentage = 1.0f / (height - 1) * row;
 
-            currentDebuggingObject.GetComponent<Renderer>().material.color = new Color(m_GroundInfoStructArray[i].waterflow, m_GroundInfoStructArray[i].waterflow, m_GroundInfoStructArray[i].waterflow);
+            currentDebuggingObject.GetComponent<Renderer>().material.color = new Color(m_GroundInfoStructArray[i].ph, m_GroundInfoStructArray[i].ph, m_GroundInfoStructArray[i].ph);
             //currentDebuggingObject.GetComponent<Renderer>().material.color = new Color(xPercentage, 0.0f, yPercentage, 1.0f);
             //Debug.Log("r " + xPercentage + ", b " + yPercentage + " at " + row + "/" + column);
 
@@ -186,6 +196,7 @@ public class GroundInfoManager : MonoBehaviour
         m_MaxValueClay = ReadMaxValueFromPixel(m_ClayMap);
         m_MaxValueSand = ReadMaxValueFromPixel(m_SandMap);
         m_MaxValueSilt = ReadMaxValueFromPixel(m_SiltMap);
+        m_MaxPH        = ReadMaxValueFromPixel(m_SoilAcidityMap);
     }
 
     private float ReadMaxValueFromPixel(Texture2D texture)
@@ -202,7 +213,7 @@ public class GroundInfoManager : MonoBehaviour
             }
         }
 
-        Debug.Log("px, highest256: " + maxValue * 256.0f);
+        //Debug.Log("px, highest256: " + maxValue * 256.0f);
         return maxValue * 256.0f;
         
     }

@@ -237,7 +237,7 @@ MonoBehaviour:
   m_TestMap: {fileID: 2800000, guid: f342f1c526c109c4891c871bbfa16e9a, type: 3}
   m_TerrainMaterial: {fileID: 2100000, guid: e27dfd536aa26ba42b9d3b9074fa4826, type: 2}
   m_TerrainDivisionAmount: 0
-  m_GroundTemperature: 20
+  m_GroundTemperature: 15
   m_HeightScalingFactor: 50
   m_Timer: 0
   m_TimeScale: 0.1
@@ -404,7 +404,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   testFile: 
-  texture: {fileID: 2800000, guid: cbe0ea27c50e70d41baeeb39af5eb9f5, type: 3}
+  texture: {fileID: 2800000, guid: a0d6abb8ba343cf42a3db38b4b9fa091, type: 3}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -593,6 +593,7 @@ GameObject:
   - component: {fileID: 1622023709}
   - component: {fileID: 1622023711}
   - component: {fileID: 1622023712}
+  - component: {fileID: 1622023713}
   m_Layer: 0
   m_Name: SeparatedSimManager
   m_TagString: Untagged
@@ -615,22 +616,39 @@ MonoBehaviour:
   m_SimulationSeed: 42
   m_SimulationAmount: 10
   m_CurrentSimCounter: 0
-  m_IterationsPerSimulation: 100
-  m_TimeTillOneYearIsOver: 0.2
+  m_IterationsPerSimulation: 250
+  m_CurrentIterationCounter: 0
+  m_TimeTillOneYearIsOver: 0
   timer: 0
+  m_EvaluationAtIterations: 50
   m_Plants: []
   m_AmountOfPlants: 0
-  m_InitialPlantAmount: 20
+  m_MaxPlantSize: 0
+  m_InitialPlantAmount: 300
   plantSpecies:
-  - {fileID: 11400000, guid: b8a65a66aaeb1dc499a259efae184991, type: 2}
-  - {fileID: 11400000, guid: f78cc5aa51e875a46a65b5ca73fd60ad, type: 2}
   - {fileID: 11400000, guid: c776fb717195a66478dd4663716a1cc5, type: 2}
+  - {fileID: 11400000, guid: ca2153ac9c03fec45bbc0d9105ab53b2, type: 2}
+  - {fileID: 11400000, guid: fdaaf74d60e97cd4e9de078aab97e701, type: 2}
+  - {fileID: 11400000, guid: 5b5c4cd2fc8e0fa49a3ab3209ae64196, type: 2}
+  - {fileID: 11400000, guid: 11d193a1c884a3045a7eb7b23300a9c8, type: 2}
+  - {fileID: 11400000, guid: 4cc5da9db30a42846a2054b425389e53, type: 2}
+  - {fileID: 11400000, guid: 3966d9b36cc61194aad462db09f54062, type: 2}
+  - {fileID: 11400000, guid: 1013770dde709174287c95c7e3a108f3, type: 2}
+  - {fileID: 11400000, guid: dd37b5ea434403147aa8895921488682, type: 2}
+  - {fileID: 11400000, guid: 0a13078ca6dc347458a8fc530eb4e9cf, type: 2}
+  - {fileID: 11400000, guid: d6ac3e4ac729a5c4daf5690583a00fc4, type: 2}
+  - {fileID: 11400000, guid: af626eecfedce6b4ab9a72338b4a9477, type: 2}
+  - {fileID: 11400000, guid: 855390f775f6ab0469213ea8fc34c358, type: 2}
+  - {fileID: 11400000, guid: 871a1056018028444acf7a0bb911b7ea, type: 2}
+  - {fileID: 11400000, guid: 6afe6ed57a0a708468dd9ee049c67d13, type: 2}
+  - {fileID: 11400000, guid: a62727651f9ec8a409ea31520a24b7fc, type: 2}
   m_FlowMap: {fileID: 2800000, guid: 215c6b275a1bb134d814ba3af8870373, type: 3}
   m_OcclusionMap: {fileID: 2800000, guid: 161bb2be6fb3a944bb3840d5ad15ff97, type: 3}
   m_Terrain: {fileID: 74521680}
   m_UsableGround: {fileID: 2800000, guid: 7b66bba9f799b3245a7e5e5fb65f42f4, type: 3}
   m_SeaLevelCutOff: 0.99
-  m_DistanceBetweenTrees: 2
+  m_DistanceBetweenTrees: 1
+  m_UseSoilData: 1
   m_ClayMap: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
   m_SandMap: {fileID: 2800000, guid: 0029b9a387b7f054cb40eb868d945d99, type: 3}
   m_SiltMap: {fileID: 2800000, guid: b916f36ddd4b9a941939d9f9c0f5b0fa, type: 3}
@@ -668,7 +686,8 @@ MonoBehaviour:
   m_InstancedMaterial: {fileID: 2100000, guid: c66580a1fcf0db2489de09ceacb9a6ba, type: 2}
   m_TypeAInstancedMaterial: {fileID: 2100000, guid: b2ae8c08dd1f2ac44a5bc77d2c5587bc, type: 2}
   m_TypeBInstancedMaterial: {fileID: 2100000, guid: a62e8da5194101042a4d89028ef6f912, type: 2}
-  m_ScaleFactor: 0.2
+  m_ShowVisualization: 0
+  m_ScaleFactor: 0.1
 --- !u!114 &1622023712
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -681,21 +700,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bc68bcfa42a09c240b5f79cacf226516, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_FlowMap: {fileID: 2800000, guid: 215c6b275a1bb134d814ba3af8870373, type: 3}
+  m_FlowMap: {fileID: 2800000, guid: 02f9ea859eecc3d40961098f4af51489, type: 3}
   m_OcclusionMap: {fileID: 2800000, guid: d8e5b538e0ca3af46b33a7aeee567c2a, type: 3}
   m_ClayMap: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
   m_SandMap: {fileID: 2800000, guid: 0029b9a387b7f054cb40eb868d945d99, type: 3}
   m_SiltMap: {fileID: 2800000, guid: b916f36ddd4b9a941939d9f9c0f5b0fa, type: 3}
+  m_SoilAcidityMap: {fileID: 2800000, guid: a0d6abb8ba343cf42a3db38b4b9fa091, type: 3}
   m_MaxValueClay: 0
   m_MaxValueSand: 0
   m_MaxValueSilt: 0
+  m_MaxPH: 0
   m_LandMass: {fileID: 2800000, guid: 7b66bba9f799b3245a7e5e5fb65f42f4, type: 3}
   m_SeaLevelCutOff: 0.99
   m_DebuggingObject: {fileID: 1711725814}
   m_DebuggingMaterial: {fileID: 0}
-  m_mapWidth: 100
-  m_mapHeight: 100
+  m_mapWidth: 512
+  m_mapHeight: 512
   m_GroundInfoStructArray: []
+--- !u!114 &1622023713
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1622023708}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2467f9db5fc923549bad63a9c88a8bd7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EuropeanDominantSpeciesMap: {fileID: 0}
+  m_SimulatedSpeciesMap: {fileID: 0}
+  m_PlantTypesMapping:
+  - {fileID: 11400000, guid: bd75243368d168c4b917395252c625b3, type: 2}
+  - {fileID: 11400000, guid: 1904901ff38fbe045956f40daedfc98d, type: 2}
+  - {fileID: 11400000, guid: 53913db9ca9b9bf40a7dfab0efd30215, type: 2}
+  simManager: {fileID: 1622023709}
 --- !u!1 &1711725814
 GameObject:
   m_ObjectHideFlags: 0

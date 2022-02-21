@@ -9,10 +9,11 @@ public struct GroundInfoStruct
     public int posX;
     public int posY;
     public bool onLand;
-    public float DEBUGLandValue;
+    //public float DEBUGLandValue;
     public float terrainOcclusion;
     public float waterflow;
     public float sand;
     public float clay;
     public float silt;
+    public float ph;
 }

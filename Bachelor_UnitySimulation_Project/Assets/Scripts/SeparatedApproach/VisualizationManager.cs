@@ -19,9 +19,7 @@ public class VisualizationManager : MonoBehaviour
 
     private bool m_PlantsHaveBeenUpdated = false;
     private PlantInfoStruct[] m_CopiedPlants; public PlantInfoStruct[] copiedPlants { set { m_CopiedPlants = value; m_PlantsHaveBeenUpdated = true; } }
-    Matrix4x4[] positionMatricesArray;
-    Matrix4x4[] typeAPlantsMatArray;
-    Matrix4x4[] typeBPlantsMatArray;
+    [SerializeField] private bool m_ShowVisualization = true;
 
     PlantSpeciesTable m_PlantSpeciesTable; 
     List<List<CopiedPlantInfo>> m_ListOfMatrixArrays;
@@ -59,8 +57,11 @@ public class VisualizationManager : MonoBehaviour
         for (int i = 0; i < m_CopiedPlants.Length; i++)
         {
             CopiedPlantInfo info    = new CopiedPlantInfo();
+            float agePercentage     = m_CopiedPlants[i].age / m_PlantSpeciesTable.GetSOByType(m_CopiedPlants[i].type).maturityAge;
+            float growthByAge       = agePercentage * m_CopiedPlants[i].health;
+            float growthWithSizeLimit = Mathf.Lerp(0.0f, m_PlantSpeciesTable.GetSOByType(m_CopiedPlants[i].type).maxSize, growthByAge);
             info.renderData         = Matrix4x4.Translate(m_CopiedPlants[i].position);
-            info.renderData         = info.renderData * Matrix4x4.Scale(new Vector3(m_CopiedPlants[i].health, m_CopiedPlants[i].health, m_CopiedPlants[i].health) * m_CopiedPlants[i].age * m_ScaleFactor);
+            info.renderData         = info.renderData * Matrix4x4.Scale(new Vector3(m_CopiedPlants[i].health, m_CopiedPlants[i].health, m_CopiedPlants[i].health) * m_CopiedPlants[i].age * growthWithSizeLimit * m_ScaleFactor);
             info.material           = m_PlantSpeciesTable.GetSOByType(m_CopiedPlants[i].type).ownMaterial;
 
             m_ListOfMatrixArrays[(int)m_CopiedPlants[i].type].Add(info);
@@ -89,60 +90,15 @@ public class VisualizationManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (m_PlantsHaveBeenUpdated)
+        if (m_PlantsHaveBeenUpdated && m_ShowVisualization)
         {
             m_PlantsHaveBeenUpdated = false;
-            //typeAPlantsMatArray = new Matrix4x4[m_CopiedPlants.Length];
-            //typeBPlantsMatArray = new Matrix4x4[m_CopiedPlants.Length];
-
-            //for (int i = 0; i < m_CopiedPlants.Length; i++)
-            //{
-            //    if(m_CopiedPlants[i].type == PlantType.TestPlantA)
-            //    {
-            //        typeAPlantsMatArray[i] = Matrix4x4.Translate(m_CopiedPlants[i].position);
-            //        typeAPlantsMatArray[i] = typeAPlantsMatArray[i] * Matrix4x4.Scale(new Vector3(m_CopiedPlants[i].health, m_CopiedPlants[i].health, m_CopiedPlants[i].health) * m_CopiedPlants[i].age * m_ScaleFactor);
-            //    }
-
-            //    if(m_CopiedPlants[i].type == PlantType.TestPlantB)
-            //    {
-            //        typeBPlantsMatArray[i] = Matrix4x4.Translate(m_CopiedPlants[i].position);
-            //        typeBPlantsMatArray[i] = typeBPlantsMatArray[i] * Matrix4x4.Scale(new Vector3(m_CopiedPlants[i].health, m_CopiedPlants[i].health, m_CopiedPlants[i].health) * m_CopiedPlants[i].age * m_ScaleFactor);
-            //    }
-            //    //positionMatricesArray[i] = Matrix4x4.Translate(m_CopiedPlants[i].position);
-            //    //positionMatricesArray[i] = positionMatricesArray[i] * Matrix4x4.Scale(new Vector3(m_CopiedPlants[i].health, m_CopiedPlants[i].health, m_CopiedPlants[i].health) * m_ScaleFactor);
-
-            //}
+           
             SortCopiedPlantsIntoMatrixLists();
             
         }
         SendPlantListsToRenderByType();
-        //if(typeAPlantsMatArray != null | typeBPlantsMatArray != null)
-        //{
-        //    if(typeAPlantsMatArray.Length < 1024 && typeAPlantsMatArray.Length > 0)
-        //    {
-        //        Graphics.DrawMeshInstanced(m_InstancedMesh, 0, m_TypeAInstancedMaterial, typeAPlantsMatArray);
-
-
-        //    }
-
-        //    if (typeBPlantsMatArray.Length < 1024 && typeBPlantsMatArray.Length > 0)
-        //    {
-        //        Graphics.DrawMeshInstanced(m_InstancedMesh, 0, m_TypeBInstancedMaterial, typeBPlantsMatArray);
-
-
-        //    }
-        //    if (typeAPlantsMatArray.Length >= 1024)
-        //    {
-
-        //        CreateAndDrawInstancedMeshes((int)(typeAPlantsMatArray.Length) / 1023, typeAPlantsMatArray, m_TypeAInstancedMaterial);
-        //    }
-        //    if (typeBPlantsMatArray.Length >= 1024)
-        //    {
-
-        //        CreateAndDrawInstancedMeshes((int)(typeBPlantsMatArray.Length) / 1023, typeBPlantsMatArray, m_TypeBInstancedMaterial);
-        //    }
-        //}
-
+       
     }
 
     private void CreateAndDrawInstancedMeshes(int iterations, Matrix4x4[] positions, Material instanceMaterial)

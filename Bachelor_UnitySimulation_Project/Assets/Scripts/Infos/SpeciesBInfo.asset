@@ -15,8 +15,10 @@ MonoBehaviour:
   m_PlantType: 1
   m_OwnSpeciesPrefab: {fileID: 7442068329141730791, guid: 0e59ff24015778c4da81c09ed17a9e2b, type: 3}
   m_OwnMaterial: {fileID: 2100000, guid: a62e8da5194101042a4d89028ef6f912, type: 2}
+  m_TypeColor: {r: 0.011347453, g: 0.21373469, b: 0.4811321, a: 1}
   m_MaturityAge: 15
   m_DeathAge: 22
+  m_MaxSize: 3
   m_SeedDistributionAmount: 1
   m_MaxDistributionDistance: 50
   m_OptimalOcclusion: 0.9
@@ -29,8 +31,4 @@ MonoBehaviour:
   m_PreferredClayValue: 0.5
   m_PreferredSiltValue: 0.3
   m_PreferredSandValue: 0.3
-  m_TakenClayValue: 0.3
-  m_TakenSandValue: 0
-  m_TakenSiltValue: 0
-  m_SoilTakingTestValue: 256
   m_PersistenceValue: 0.8
