@@ -27,10 +27,10 @@ MonoBehaviour:
   m_FlowFactorWeight: 0.5
   m_OptimalTemperature: 12
   m_TemperatureWeight: 0.7
-  m_SoilTextureWeight: 0
+  m_SoilTextureWeight: 0.33
   m_PreferredClayValue: 0.2
   m_PreferredSiltValue: 0.4
   m_PreferredSandValue: 0.4
-  m_m_SoilCompositionWeight: 0.7
+  m_SoilCompositionWeight: 0.6
   m_PreferredAcidityValue: 5
   m_PersistenceValue: 0.8

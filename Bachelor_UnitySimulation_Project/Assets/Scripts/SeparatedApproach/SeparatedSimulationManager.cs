@@ -35,11 +35,14 @@ public class SeparatedSimulationManager : MonoBehaviour
     [SerializeField] private float m_DistanceBetweenTrees;
 
     [Header("Soil Composition")]
-    [SerializeField] private bool m_UseSoilData;
+    [SerializeField] private float m_AdditionalSoilTextureWeight;
+    [SerializeField] private bool m_UseSoilTexture;
+    [SerializeField] private bool m_UseSoilpH;
     [SerializeField] private Texture2D m_ClayMap;
     [SerializeField] private Texture2D m_SandMap;
     [SerializeField] private Texture2D m_SiltMap;
 
+    [SerializeField] private bool m_RenderAllPlants;
 
     private int m_IDCounter = 0;
 
@@ -57,6 +60,7 @@ public class SeparatedSimulationManager : MonoBehaviour
     Bounds m_TerrainBounds;
 
     private const int m_GRID_CELL_DIVISIONS = 64;
+    private const int m_MAP_SIZE = 1024;
     private List<PlantInfoStruct>[,] m_PlantGridCells = new List<PlantInfoStruct>[m_GRID_CELL_DIVISIONS, m_GRID_CELL_DIVISIONS]; 
 
 
@@ -115,6 +119,8 @@ public class SeparatedSimulationManager : MonoBehaviour
         }
     }
 
+  
+
     private void CreatePlantPositionsQuad()
     {
         m_PlantGridCells = new List<PlantInfoStruct>[m_GRID_CELL_DIVISIONS, m_GRID_CELL_DIVISIONS];
@@ -148,6 +154,10 @@ public class SeparatedSimulationManager : MonoBehaviour
 
             if(m_CurrentIterationCounter % m_EvaluationAtIterations == 0)
             {
+                if (m_RenderAllPlants)
+                {
+                    RenderAllTrees();
+                }
                 EvaluateSimulation();
             }
             if (m_CurrentIterationCounter > m_IterationsPerSimulation)
@@ -318,14 +328,14 @@ public class SeparatedSimulationManager : MonoBehaviour
 
         //TODO change this one from local ground to ground array and implement changes to ground values in it
         float soilTextureValue = 0.0f;
-        if (m_UseSoilData)
+        if (m_UseSoilTexture)
         {
              soilTextureValue = CalculateSoilTextureValue(new Vector2((int)plant.position.x, (int)plant.position.z), currentPlantSO);
             factorCounter++;
         }
 
         float soilCompositionValue = 0.0f;
-        if (m_UseSoilData)
+        if (m_UseSoilpH)
         {
             soilCompositionValue = CalculateSoilCompositionValue(new Vector2((int)plant.position.x, (int)plant.position.z), currentPlantSO);
             factorCounter++;
@@ -343,7 +353,7 @@ public class SeparatedSimulationManager : MonoBehaviour
             overallViability = ((occlusionFactor * currentPlantSO.occlusionFactorWeight) 
                 + (flowFactor * currentPlantSO.flowFactorWeight) 
                 + (temperatureBasedOnHeight * currentPlantSO.temperatureWeight 
-                + (soilTextureValue * currentPlantSO.soilTextureWeight)
+                + (soilTextureValue * (currentPlantSO.soilTextureWeight + m_AdditionalSoilTextureWeight))
                 + soilCompositionValue * currentPlantSO.soilCompositionWeight)) /(float)factorCounter;
         }
 
@@ -613,7 +623,7 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private float CalculateAcidtyFactor(float groundValue, float wantedValue)
     {
-        float result = Mathf.Abs((wantedValue - groundValue) / groundValue);
+        float result = (Mathf.Abs(wantedValue - Mathf.Abs(wantedValue - groundValue))) / wantedValue;
         return result;
     }
 
@@ -714,14 +724,14 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private void EvaluateSimulation()
     {
-        // TODO: Is this value coded somewhere else?
-        const int MAP_SIZE = 1024;
+        
+     
         const float MINIMUM_INFLUENCE_TO_COUNT_AS_DOMINANT = 1.0f;
 
-        // 1) Find dominant species for every position on the map
+        // Find dominant species for every position on the map
 
         // I) For each plant, mark the fields in its influence
-        float[,,] plantDominance = new float[MAP_SIZE, MAP_SIZE, (int)PlantType.Count];
+        float[,,] plantDominance = new float[m_MAP_SIZE, m_MAP_SIZE, (int)PlantType.Count];
         foreach (PlantInfoStruct plant in m_Plants)
         {
             Vector2 plantPosition2D = new Vector2(plant.position.x, plant.position.z);
@@ -738,7 +748,7 @@ public class SeparatedSimulationManager : MonoBehaviour
             {
                 for (int iX = influencedIndices.min.x; iX < influencedIndices.max.x; iX++)
                 {
-                    if (iX < 0 || iX >= MAP_SIZE || iY < 0 || iY >= MAP_SIZE)
+                    if (iX < 0 || iX >= m_MAP_SIZE || iY < 0 || iY >= m_MAP_SIZE)
                     {
                         continue;
                     }
@@ -760,13 +770,13 @@ public class SeparatedSimulationManager : MonoBehaviour
             }
         }
 
-        // II) Build a map of which plant is the most influential at every point
-        PlantType?[,] dominantPlantType = new PlantType?[MAP_SIZE, MAP_SIZE];
-        Color[] dominantPlantColors = new Color[MAP_SIZE * MAP_SIZE];
+        // 2) Build a map of which plant is the most influential at every point
+        PlantType?[,] dominantPlantType = new PlantType?[m_MAP_SIZE, m_MAP_SIZE];
+        Color[] dominantPlantColors = new Color[m_MAP_SIZE * m_MAP_SIZE];
 
-        for (int iY = 0; iY < MAP_SIZE; iY++)
+        for (int iY = 0; iY < m_MAP_SIZE; iY++)
         {
-            for (int iX = 0; iX < MAP_SIZE; iX++)
+            for (int iX = 0; iX < m_MAP_SIZE; iX++)
             {
                 float highestDominanceValue = 0.0f;
                 for (int iP = 0; iP < (int)PlantType.Count; iP++)
@@ -777,31 +787,74 @@ public class SeparatedSimulationManager : MonoBehaviour
                         if (highestDominanceValue >= MINIMUM_INFLUENCE_TO_COUNT_AS_DOMINANT)
                         {
                             dominantPlantType[iX, iY] = (PlantType)iP;
-                            dominantPlantColors[iY * MAP_SIZE + iX] = plantSpeciesTable.GetSOByType((PlantType)iP).typeColor;
+                            dominantPlantColors[iY * m_MAP_SIZE + iX] = plantSpeciesTable.GetSOByType((PlantType)iP).typeColor;
                         }
                     }
                 }
 
                 if (highestDominanceValue <= MINIMUM_INFLUENCE_TO_COUNT_AS_DOMINANT)
                 {
-                    dominantPlantColors[iY * MAP_SIZE + iX] = Color.gray;
+                    dominantPlantColors[iY * m_MAP_SIZE + iX] = Color.gray;
                 }
             }
         }
 
-        // III) Save map
-        Texture2D dominanceMap = new Texture2D(MAP_SIZE, MAP_SIZE);
-        dominanceMap.SetPixels(0, 0, MAP_SIZE, MAP_SIZE, dominantPlantColors);
+        // 3) Save map
+        Texture2D dominanceMap = new Texture2D(m_MAP_SIZE, m_MAP_SIZE);
+        dominanceMap.SetPixels(0, 0, m_MAP_SIZE, m_MAP_SIZE, dominantPlantColors);
         byte[] dominanceMapBytes = dominanceMap.EncodeToPNG();
         string circumstancesPath = "initPA_" + m_InitialPlantAmount + "_dist_" + m_DistanceBetweenTrees +"/";
         string dirPath = Application.dataPath + "/../Generated/" + circumstancesPath;
         string timeString = System.DateTime.Now.Day + "-" + System.DateTime.Now.Month + "_" + System.DateTime.Now.Hour + "-" + System.DateTime.Now.Minute;
-        string filePath = dirPath + "dominanceMap_" + timeString + "_iter" + m_CurrentSimCounter + ".png";
+        string filePath = dirPath + "dominanceMap_" + timeString + "_simCount" + m_CurrentSimCounter + "_iteration" + m_CurrentIterationCounter + ".png";
         if (!Directory.Exists(dirPath))
         {
             Directory.CreateDirectory(dirPath);
         }
         File.WriteAllBytes(filePath, dominanceMapBytes);
+    }
+
+
+
+    private void RenderAllTrees()
+    {
+
+        //1) write each plant with their color into an array 
+        Color[] allPlantColors = new Color[m_MAP_SIZE * m_MAP_SIZE];
+        for(int iY = 0; iY < m_MAP_SIZE; iY++)
+        {
+            for(int iX = 0; iX < m_MAP_SIZE; iX++)
+            {
+                if(IsOnLand(new Vector3(iX, 0.0f, iY)))
+                {
+                    allPlantColors[iY * m_MAP_SIZE + iX] = Color.white;
+                }
+                else
+                {
+                    allPlantColors[iY * m_MAP_SIZE + iX] = Color.grey;
+                }
+            }
+        }
+        foreach(PlantInfoStruct plant in m_Plants)
+        {
+            Vector2 plantPosition2D = new Vector2(plant.position.x, plant.position.z);
+            allPlantColors[(int)plantPosition2D.y * m_MAP_SIZE + (int)plantPosition2D.x] = plantSpeciesTable.GetSOByType(plant.type).typeColor;
+        }
+        //2) fill map with array content
+        Texture2D allPlantPositionsMap = new Texture2D(m_MAP_SIZE, m_MAP_SIZE);
+        allPlantPositionsMap.SetPixels(0, 0, m_MAP_SIZE, m_MAP_SIZE, allPlantColors);
+
+        byte[] allPlantsMapBytes    = allPlantPositionsMap.EncodeToPNG();
+        string circumstancesPath    = "initPA_" + m_InitialPlantAmount + "_dist_" + m_DistanceBetweenTrees+ "/";
+        string dirPath              = Application.dataPath + "/../Generated/" + circumstancesPath;
+        string timeString           = System.DateTime.Now.Day + "-" + System.DateTime.Now.Month + "_" + System.DateTime.Now.Hour + "-" + System.DateTime.Now.Minute;
+        string filePath             = dirPath + "allPlantsMap_" + m_AmountOfPlants+ "_time" + timeString + "_simCount" + m_CurrentSimCounter + "_iteration" + m_CurrentIterationCounter + ".png";
+
+        if (!Directory.Exists(dirPath))
+        {
+            Directory.CreateDirectory(dirPath);
+        }
+        File.WriteAllBytes(filePath, allPlantsMapBytes);
     }
 
     private float CalculatePlantInfluenceRadius(PlantInfoStruct plant)
@@ -823,7 +876,7 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private RectInt GetInfluencedRect(Vector2 midPosition, float range)
     {
-        // TODO: Enter correct value
+        // this factor is currently 1 
         const float METER_TO_PIXEL_FACTOR = 1.0f;
 
         return new RectInt((int)(midPosition.x - METER_TO_PIXEL_FACTOR * range), (int)(midPosition.y - METER_TO_PIXEL_FACTOR * range), 

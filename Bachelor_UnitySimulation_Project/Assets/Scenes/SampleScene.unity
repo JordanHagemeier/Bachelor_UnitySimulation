@@ -616,7 +616,7 @@ MonoBehaviour:
   m_SimulationSeed: 42
   m_SimulationAmount: 10
   m_CurrentSimCounter: 0
-  m_IterationsPerSimulation: 250
+  m_IterationsPerSimulation: 500
   m_CurrentIterationCounter: 0
   m_TimeTillOneYearIsOver: 0
   timer: 0
@@ -624,7 +624,7 @@ MonoBehaviour:
   m_Plants: []
   m_AmountOfPlants: 0
   m_MaxPlantSize: 0
-  m_InitialPlantAmount: 300
+  m_InitialPlantAmount: 400
   plantSpecies:
   - {fileID: 11400000, guid: c776fb717195a66478dd4663716a1cc5, type: 2}
   - {fileID: 11400000, guid: ca2153ac9c03fec45bbc0d9105ab53b2, type: 2}
@@ -643,15 +643,18 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6afe6ed57a0a708468dd9ee049c67d13, type: 2}
   - {fileID: 11400000, guid: a62727651f9ec8a409ea31520a24b7fc, type: 2}
   m_FlowMap: {fileID: 2800000, guid: 215c6b275a1bb134d814ba3af8870373, type: 3}
-  m_OcclusionMap: {fileID: 2800000, guid: 161bb2be6fb3a944bb3840d5ad15ff97, type: 3}
+  m_OcclusionMap: {fileID: 2800000, guid: 1e5843bb643b79b43a1a2db4663946f4, type: 3}
   m_Terrain: {fileID: 74521680}
   m_UsableGround: {fileID: 2800000, guid: 7b66bba9f799b3245a7e5e5fb65f42f4, type: 3}
   m_SeaLevelCutOff: 0.99
   m_DistanceBetweenTrees: 1
-  m_UseSoilData: 1
+  m_AdditionalSoilTextureWeight: 0
+  m_UseSoilTexture: 0
+  m_UseSoilComposition: 1
   m_ClayMap: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
   m_SandMap: {fileID: 2800000, guid: 0029b9a387b7f054cb40eb868d945d99, type: 3}
   m_SiltMap: {fileID: 2800000, guid: b916f36ddd4b9a941939d9f9c0f5b0fa, type: 3}
+  m_RenderAllPlants: 0
   m_WritingTextureTest: {fileID: 2800000, guid: c912083a5d964de4792252ae94ef0d57, type: 3}
   m_WritingTextureTestCopy: {fileID: 0}
   m_CopiedPlants: []
@@ -701,7 +704,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_FlowMap: {fileID: 2800000, guid: 02f9ea859eecc3d40961098f4af51489, type: 3}
-  m_OcclusionMap: {fileID: 2800000, guid: d8e5b538e0ca3af46b33a7aeee567c2a, type: 3}
+  m_OcclusionMap: {fileID: 2800000, guid: 1e5843bb643b79b43a1a2db4663946f4, type: 3}
   m_ClayMap: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
   m_SandMap: {fileID: 2800000, guid: 0029b9a387b7f054cb40eb868d945d99, type: 3}
   m_SiltMap: {fileID: 2800000, guid: b916f36ddd4b9a941939d9f9c0f5b0fa, type: 3}

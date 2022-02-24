@@ -34,7 +34,7 @@ public class PlantSpeciesInfoScriptableObject : ScriptableObject
     [SerializeField] private float m_PreferredSiltValue; public float preferredSiltValue { get { return m_PreferredSiltValue; } }
     [SerializeField] private float m_PreferredSandValue; public float preferredSandValue { get { return m_PreferredSandValue; } }
 
-    [SerializeField] private float m_m_SoilCompositionWeight; public float soilCompositionWeight { get { return m_m_SoilCompositionWeight; } }
+    [SerializeField] private float m_SoilCompositionWeight; public float soilCompositionWeight { get { return m_SoilCompositionWeight; } }
     [SerializeField] private float m_PreferredAcidityValue; public float preferredAcidityValue { get { return m_PreferredAcidityValue; } }
 
     //[SerializeField] private float m_TakenClayValue; public float takenClayValue { get { return m_TakenClayValue; } }

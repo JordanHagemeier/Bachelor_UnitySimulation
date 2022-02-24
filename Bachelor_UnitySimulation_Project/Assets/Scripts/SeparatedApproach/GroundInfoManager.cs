@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 
 public class GroundInfoManager : MonoBehaviour
 {
@@ -42,6 +43,11 @@ public class GroundInfoManager : MonoBehaviour
         m_GroundInfoStructArray.CopyTo(m_GroundInfoStructArrayCOPY, 0);
 
     }
+
+    //private void Start()
+    //{
+    //    RenderSoilValueToMap();
+    //}
 
     // Update is called once per frame
     void Update()
@@ -110,11 +116,14 @@ public class GroundInfoManager : MonoBehaviour
 
                 //all of these maps have the same size
  
-                m_GroundInfoStructArray[currentInfo].clay = (m_ClayMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).r * 256.0f) / m_MaxValueClay;
-                m_GroundInfoStructArray[currentInfo].sand = (m_SandMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).g * 256.0f) / m_MaxValueSand;
-                m_GroundInfoStructArray[currentInfo].silt = (m_SiltMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).b * 256.0f) / m_MaxValueSilt;
+                m_GroundInfoStructArray[currentInfo].clay = (m_ClayMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).r * 256.0f) /*/ m_MaxValueClay*/;
+                m_GroundInfoStructArray[currentInfo].sand = (m_SandMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).g * 256.0f) /*/ m_MaxValueSand*/;
+                m_GroundInfoStructArray[currentInfo].silt = (m_SiltMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).b * 256.0f) /*/ m_MaxValueSilt*/;
                 
-                
+                if(m_GroundInfoStructArray[currentInfo].clay > 0.0f)
+                {
+                    Debug.Log("hurray, clay is big!" + currentInfo);
+                }
                 //these maps should be smaller and need new pixel positions
                 //TODO
                
@@ -129,7 +138,7 @@ public class GroundInfoManager : MonoBehaviour
                
                 int pixelPosXOnMapPH = (int)(percentageX * m_SoilAcidityMap.width);
                 int pixelPosYOnMapPH = (int)(percentageY * m_SoilAcidityMap.height);
-                m_GroundInfoStructArray[currentInfo].ph                 = (m_SoilAcidityMap.GetPixel(pixelPosXOnMapPH, pixelPosYOnMapPH).r * 256.0f) / m_MaxPH;
+                m_GroundInfoStructArray[currentInfo].ph                 = (m_SoilAcidityMap.GetPixel(pixelPosXOnMapPH, pixelPosYOnMapPH).r * 256.0f);
 
                 m_GroundInfoStructArray[currentInfo].onLand = false;
 
@@ -145,7 +154,6 @@ public class GroundInfoManager : MonoBehaviour
                 {
                     m_GroundInfoStructArray[currentInfo].onLand = true;
                 }
-                //Debug.Log(currentInfo);
             }
             
         }
@@ -154,6 +162,57 @@ public class GroundInfoManager : MonoBehaviour
 
     }
 
+    private bool IsOnLand(int x, int y)
+    {
+        float pixelX = (x / m_mapWidth) * m_LandMass.width;
+
+        float pixelY = (y / m_mapHeight) * m_LandMass.height;
+        float landValue = m_LandMass.GetPixel((int)pixelX, (int)pixelY).r;
+        //m_GroundInfoStructArray[currentInfo].DEBUGLandValue = landValue;
+        if (landValue > m_SeaLevelCutOff)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    private void RenderSoilValueToMap()
+    {
+        Color[] allGroundColors = new Color[(int)m_mapWidth * (int)m_mapHeight];
+        for (int iY = 0; iY < m_mapHeight; iY++)
+        {
+            for (int iX = 0; iX < m_mapWidth; iX++)
+            {
+                if ( IsOnLand(iX,  iY))
+                {
+                    int index = GetIndex1D(iX, iY);
+                    allGroundColors[iY * (int)m_mapWidth + iX] = new Color(m_GroundInfoStructArray[index].sand / 256.0f, m_GroundInfoStructArray[index].sand / 256.0f, m_GroundInfoStructArray[index].sand / 256.0f);
+                    
+                }
+                else
+                {
+                    allGroundColors[iY * (int)m_mapWidth + iX] = Color.grey;
+                }
+            }
+        }
+
+        
+ 
+        //2) fill map with array content
+        Texture2D allGroundValuesMap = new Texture2D((int)m_mapWidth, (int)m_mapHeight);
+        allGroundValuesMap.SetPixels(0, 0, (int)m_mapWidth, (int)m_mapHeight, allGroundColors);
+
+        byte[] groundInfoBytes = allGroundValuesMap.EncodeToPNG();
+        string dirPath = Application.dataPath + "/../Generated/";
+        string timeString = System.DateTime.Now.Day + "-" + System.DateTime.Now.Month + "_" + System.DateTime.Now.Hour + "-" + System.DateTime.Now.Minute;
+        string filePath = dirPath + "groundSandValues" + "_time" + timeString + ".png";
+
+        if (!Directory.Exists(dirPath))
+        {
+            Directory.CreateDirectory(dirPath);
+        }
+        File.WriteAllBytes(filePath, groundInfoBytes);
+    }
    
 
     private void SetupDebuggingObjects(int height, int width)

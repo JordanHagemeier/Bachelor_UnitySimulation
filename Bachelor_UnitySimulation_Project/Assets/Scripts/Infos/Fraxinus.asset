@@ -21,16 +21,16 @@ MonoBehaviour:
   m_MaxSize: 1
   m_SeedDistributionAmount: 1
   m_MaxDistributionDistance: 50
-  m_OptimalOcclusion: 0.2
+  m_OptimalOcclusion: 0.8
   m_OcclusionFactorWeight: 0.8
   m_OptimalFlow: 0.6
   m_FlowFactorWeight: 0.2
   m_OptimalTemperature: 14
   m_TemperatureWeight: 0.3
-  m_SoilTextureWeight: 0
+  m_SoilTextureWeight: 0.5
   m_PreferredClayValue: 0.4
   m_PreferredSiltValue: 0.4
   m_PreferredSandValue: 0.2
-  m_m_SoilCompositionWeight: 0.3
+  m_SoilCompositionWeight: 0.3
   m_PreferredAcidityValue: 6
   m_PersistenceValue: 0.7
