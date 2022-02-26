@@ -78,7 +78,7 @@ public class SeparatedSimulationManager : MonoBehaviour
         m_CurrentSimCounter = m_StartingIteration;
         ResetSimulation(m_CurrentSimCounter);
 
-        simulationString = System.DateTime.Now.Day + "-" + System.DateTime.Now.Month + "_" + System.DateTime.Now.Hour + "-" + System.DateTime.Now.Minute;
+        simulationString = System.DateTime.Now.Day + "-" + System.DateTime.Now.Month + "_" + System.DateTime.Now.Hour + "-" + System.DateTime.Now.Minute + (m_UseSoilTexture ? "_SoilTexture" : "_NoSoilTexture") + (m_UseSoilpH ? "_SoilPH" : "_NoSoilPH");
 
     }
 
@@ -871,6 +871,7 @@ public class SeparatedSimulationManager : MonoBehaviour
         float[,,] plantDominance = new float[m_MAP_SIZE, m_MAP_SIZE, (int)PlantType.Count];
         float[,,] plantViability = new float[m_MAP_SIZE, m_MAP_SIZE, (int)PlantType.Count];
         float[,,] plantViabilityWeights = new float[m_MAP_SIZE, m_MAP_SIZE, (int)PlantType.Count];
+        float[] summedUpViability = new float[(int)PlantType.Count];
 
         foreach (PlantInfoStruct plant in m_Plants)
         {
@@ -921,10 +922,11 @@ public class SeparatedSimulationManager : MonoBehaviour
             {
                 // Viability
                 float viabilityValue = plant.health;
+                summedUpViability[(int) plant.type] += plant.health;
+
                 const float VIABILITY_VISUALIZATION_RADIUS = 5.0f;
                 RectInt viabilityIndices = GetInfluencedRect(plantPosition2D, VIABILITY_VISUALIZATION_RADIUS);
 
-                // Dominance
                 for (int iY = viabilityIndices.min.y; iY < viabilityIndices.max.y; iY++)
                 {
                     for (int iX = viabilityIndices.min.x; iX < viabilityIndices.max.x; iX++)
@@ -962,10 +964,11 @@ public class SeparatedSimulationManager : MonoBehaviour
         // 2) Build a map of which plant is the most influential at every point
         //PlantType?[,] dominantPlantType = new PlantType?[m_MAP_SIZE, m_MAP_SIZE];
         Color[] dominantPlantColors = new Color[m_MAP_SIZE * m_MAP_SIZE];
-        Color[][] occurancePlantColors = new Color[(int)PlantType.Count][];
+        Color[][] viabilityPlantColors = new Color[(int)PlantType.Count][];
+
         for (int iP = 0; iP < (int)PlantType.Count; iP++)
         {
-            occurancePlantColors[iP] = new Color[m_MAP_SIZE * m_MAP_SIZE];
+            viabilityPlantColors[iP] = new Color[m_MAP_SIZE * m_MAP_SIZE];
         }
 
         for (int iY = 0; iY < m_MAP_SIZE; iY++)
@@ -992,24 +995,63 @@ public class SeparatedSimulationManager : MonoBehaviour
                     dominantPlantColors[iY * m_MAP_SIZE + iX] = Color.gray;
                 }
 
-                // Occurance
+                // Viability
                 for (int iP = 0; iP < (int)PlantType.Count; iP++)
                 {
                     float weights = plantViabilityWeights[iX, iY, iP];
                     if (weights > 0)
                     {
-                        float occuranceValue01 = plantViability[iX, iY, iP] / weights;
-                        occurancePlantColors[iP][iY * m_MAP_SIZE + iX] = Color.Lerp(Color.white, Color.black, occuranceValue01);
+                        float viability = plantViability[iX, iY, iP];
+                        float viabilityValue01 = viability / weights;
+                        viabilityPlantColors[iP][iY * m_MAP_SIZE + iX] = Color.Lerp(Color.black, Color.white, viabilityValue01);
                     }
                     else
                     {
-                        occurancePlantColors[iP][iY * m_MAP_SIZE + iX] = Color.blue;
+                        viabilityPlantColors[iP][iY * m_MAP_SIZE + iX] = Color.blue;
                     }
                 }
             }
         }
 
-        // 3) Save maps
+        // 3) For the dominance map, render out a histogram of which species how many pixels
+        const int HISTOGRAM_SIZE = 84;
+        const int HISTOGRAM_POSITION_X = m_MAP_SIZE - HISTOGRAM_SIZE - 1;
+        const int HISTOGRAM_POSITION_Y = 0;
+        const float HISTOGRAM_BAR_WIDTH = HISTOGRAM_SIZE / (float)PlantType.Count;
+
+        // I) Find highest summed viability of all plants
+        float highestPlantViability = 0.0f;
+        for (int iP = 0; iP < (int)PlantType.Count; iP++)
+        {
+            if (summedUpViability[iP] > highestPlantViability)
+            {
+                highestPlantViability = summedUpViability[iP];
+            }
+        }
+
+        for (int iP = 0; iP < (int)PlantType.Count; iP++)
+        {
+            float barFillPercentage = summedUpViability[iP] / highestPlantViability;
+
+            for (int iY = HISTOGRAM_POSITION_Y; iY < HISTOGRAM_POSITION_Y + HISTOGRAM_SIZE; iY++)
+            {
+                float pixelPercentage = (iY - HISTOGRAM_POSITION_Y) / (float)(HISTOGRAM_SIZE);
+                bool rowFilled = barFillPercentage > pixelPercentage;
+                int xStart  = HISTOGRAM_POSITION_X + (int)(iP * HISTOGRAM_BAR_WIDTH);
+                int xEnd    = HISTOGRAM_POSITION_X + (int)((iP + 1) * HISTOGRAM_BAR_WIDTH);
+
+                if (rowFilled)
+                {
+                    Color rowColor = plantSpeciesTable.GetSOByType((PlantType)iP).typeColor;
+                    for (int iX = xStart; iX < xEnd; iX++)
+                    {
+                        dominantPlantColors[iY * m_MAP_SIZE + iX] = rowColor;
+                    }
+                }
+            }
+        }
+
+        // 4) Save maps
         string circumstancesPath = "initPA_" + m_InitialPlantAmount + "_dist_" + m_DistanceBetweenTrees + "/";
         string dirPath = Application.dataPath + "/../Generated/" + circumstancesPath + "/" + simulationString + "/";
 
@@ -1028,7 +1070,7 @@ public class SeparatedSimulationManager : MonoBehaviour
         {
             string filePathOccurance = dirPath + "occuranceMap_" + iP + plantSpeciesTable.GetSOByType((PlantType)iP).name + "_" + "_simCount" + m_CurrentSimCounter + "_iteration" + m_CurrentIterationCounter + ".png";
             Texture2D occuranceMap = new Texture2D(m_MAP_SIZE, m_MAP_SIZE);
-            occuranceMap.SetPixels(0, 0, m_MAP_SIZE, m_MAP_SIZE, occurancePlantColors[iP]);
+            occuranceMap.SetPixels(0, 0, m_MAP_SIZE, m_MAP_SIZE, viabilityPlantColors[iP]);
             File.WriteAllBytes(filePathOccurance, occuranceMap.EncodeToPNG());
         }
     }

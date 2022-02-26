@@ -617,15 +617,15 @@ MonoBehaviour:
   m_StartingIteration: 0
   m_SimulationAmount: 10
   m_CurrentSimCounter: 0
-  m_IterationsPerSimulation: 121
+  m_IterationsPerSimulation: 350
   m_CurrentIterationCounter: 0
   m_TimeTillOneYearIsOver: 0
   timer: 0
-  m_EvaluateAtIterationID: 01000000050000000a0000000f000000190000001e00000023000000280000002d0000003200000037000000410000004d0000005a0000006f00000078000000
+  m_EvaluateAtIterationID: 01000000050000000c000000140000001e0000002d000000410000005a00000078000000a0000000d2000000040100004a010000
   m_Plants: []
   m_AmountOfPlants: 0
   m_MaxPlantSize: 0
-  m_InitialPlantAmount: 400
+  m_InitialPlantAmount: 2000
   plantSpecies:
   - {fileID: 11400000, guid: ca2153ac9c03fec45bbc0d9105ab53b2, type: 2}
   - {fileID: 11400000, guid: fdaaf74d60e97cd4e9de078aab97e701, type: 2}
@@ -648,7 +648,7 @@ MonoBehaviour:
   m_SeaLevelCutOff: 0.99
   m_DistanceBetweenTrees: 1
   m_AdditionalSoilTextureWeight: 0
-  m_UseSoilTexture: 1
+  m_UseSoilTexture: 0
   m_UseSoilpH: 0
   m_ClayMap: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
   m_SandMap: {fileID: 2800000, guid: 0029b9a387b7f054cb40eb868d945d99, type: 3}
