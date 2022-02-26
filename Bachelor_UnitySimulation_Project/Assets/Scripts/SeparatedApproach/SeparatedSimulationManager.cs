@@ -9,6 +9,7 @@ public class SeparatedSimulationManager : MonoBehaviour
 {
     [Header ("Simulation Meta Data")]
     [SerializeField] private int m_SimulationSeed;
+    [SerializeField] private int m_StartingIteration;
     [SerializeField] private int m_SimulationAmount;
     [SerializeField] private int m_CurrentSimCounter = 0;
     [SerializeField] private int m_IterationsPerSimulation;
@@ -57,6 +58,8 @@ public class SeparatedSimulationManager : MonoBehaviour
     CurrentPlantsSerializer plantSerializer = new CurrentPlantsSerializer();
     [HideInInspector] public PlantSpeciesTable plantSpeciesTable = new PlantSpeciesTable();
 
+    [SerializeField] private float m_PlantPrimeAgePercentage; 
+
     Bounds m_TerrainBounds;
 
     private const int m_GRID_CELL_DIVISIONS = 64;
@@ -71,6 +74,7 @@ public class SeparatedSimulationManager : MonoBehaviour
         
         Random.InitState(m_SimulationSeed);
         StartUpMetaInformation();
+        m_CurrentSimCounter = m_StartingIteration;
         ResetSimulation(m_CurrentSimCounter);
       
     }
@@ -870,8 +874,18 @@ public class SeparatedSimulationManager : MonoBehaviour
     private float CalculatePlantDominanceValue(PlantInfoStruct plant)
     {
         // TODO: Proper calculation
-
-        return plant.age * plant.health;
+        float ageInfluence = 0.0f;
+        int deathAge = plantSpeciesTable.GetSOByType(plant.type).deathAge;
+        float primeAge = deathAge * m_PlantPrimeAgePercentage;
+        if (plant.age <= primeAge)
+        {
+            ageInfluence = (float)plant.age / (float)primeAge;
+        }
+        else if(plant.age > primeAge)
+        {
+            ageInfluence = 1.0f - (((float)plant.age - (float)primeAge) / ((float)deathAge - (float)primeAge));
+        }
+        return (ageInfluence * plant.age) * plant.health;
     }
 
     private RectInt GetInfluencedRect(Vector2 midPosition, float range)

@@ -614,6 +614,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_SimulationSeed: 42
+  m_StartingIteration: 0
   m_SimulationAmount: 10
   m_CurrentSimCounter: 0
   m_IterationsPerSimulation: 500
@@ -650,15 +651,16 @@ MonoBehaviour:
   m_DistanceBetweenTrees: 1
   m_AdditionalSoilTextureWeight: 0
   m_UseSoilTexture: 0
-  m_UseSoilComposition: 1
+  m_UseSoilpH: 1
   m_ClayMap: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
   m_SandMap: {fileID: 2800000, guid: 0029b9a387b7f054cb40eb868d945d99, type: 3}
   m_SiltMap: {fileID: 2800000, guid: b916f36ddd4b9a941939d9f9c0f5b0fa, type: 3}
-  m_RenderAllPlants: 0
+  m_RenderAllPlants: 1
   m_WritingTextureTest: {fileID: 2800000, guid: c912083a5d964de4792252ae94ef0d57, type: 3}
   m_WritingTextureTestCopy: {fileID: 0}
   m_CopiedPlants: []
   m_GroundInfoManager: {fileID: 1622023712}
+  m_PlantPrimeAgePercentage: 0.8
 --- !u!4 &1622023710
 Transform:
   m_ObjectHideFlags: 0
