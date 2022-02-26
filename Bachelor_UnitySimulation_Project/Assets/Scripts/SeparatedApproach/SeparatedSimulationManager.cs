@@ -16,7 +16,8 @@ public class SeparatedSimulationManager : MonoBehaviour
     [SerializeField] private int m_CurrentIterationCounter = 0;
     [SerializeField] private float m_TimeTillOneYearIsOver;
     [SerializeField] private float timer;
-    [SerializeField] private int m_EvaluationAtIterations; 
+    //[SerializeField] private int m_EvaluationAtIterations;
+    [SerializeField] private List<int> m_EvaluateAtIterationID;
 
     [Header ("Plant Information")]
     [SerializeField] private List<PlantInfoStruct> m_Plants;
@@ -64,9 +65,9 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private const int m_GRID_CELL_DIVISIONS = 64;
     private const int m_MAP_SIZE = 1024;
-    private List<PlantInfoStruct>[,] m_PlantGridCells = new List<PlantInfoStruct>[m_GRID_CELL_DIVISIONS, m_GRID_CELL_DIVISIONS]; 
+    private List<PlantInfoStruct>[,] m_PlantGridCells = new List<PlantInfoStruct>[m_GRID_CELL_DIVISIONS, m_GRID_CELL_DIVISIONS];
 
-
+    private string simulationString = "SIM";
 
     // Start is called before the first frame update
     void Start()
@@ -76,7 +77,9 @@ public class SeparatedSimulationManager : MonoBehaviour
         StartUpMetaInformation();
         m_CurrentSimCounter = m_StartingIteration;
         ResetSimulation(m_CurrentSimCounter);
-      
+
+        simulationString = System.DateTime.Now.Day + "-" + System.DateTime.Now.Month + "_" + System.DateTime.Now.Hour + "-" + System.DateTime.Now.Minute;
+
     }
 
     private bool ResetSimulation(int iteration)
@@ -156,12 +159,12 @@ public class SeparatedSimulationManager : MonoBehaviour
         {
             timer = 0.0f;
 
-            if(m_CurrentIterationCounter % m_EvaluationAtIterations == 0)
+            if (m_EvaluateAtIterationID.Contains(m_CurrentIterationCounter))
             {
-                if (m_RenderAllPlants)
-                {
-                    RenderAllTrees();
-                }
+                //if (m_RenderAllPlants)
+                //{
+                //    RenderAllTrees();
+                //}
                 EvaluateSimulation();
             }
             if (m_CurrentIterationCounter > m_IterationsPerSimulation)
@@ -242,6 +245,8 @@ public class SeparatedSimulationManager : MonoBehaviour
             PlantSpeciesInfoScriptableObject randomlychosenPlantSpecies = plantSpecies[Random.Range(0, plantSpecies.Length)];
             PlantInfoStruct newPlant = new PlantInfoStruct(randomPos, m_IDCounter, randomlychosenPlantSpecies);
             newPlant.age = Random.Range(0, randomlychosenPlantSpecies.deathAge);
+            newPlant.health = CalculateViability(newPlant);
+
             SetOwnPlantInfoInQuadCell(newPlant);
             m_Plants.Add(newPlant);
         }
@@ -255,6 +260,7 @@ public class SeparatedSimulationManager : MonoBehaviour
         Vector3 randomPos = new Vector3(Random.Range(m_TerrainBounds.min.x, m_TerrainBounds.max.x),0.0f, Random.Range(m_TerrainBounds.min.z, m_TerrainBounds.max.z));
         return randomPos;
     }
+
     private bool TickPlants()
     {
         bool success = false;
@@ -265,7 +271,6 @@ public class SeparatedSimulationManager : MonoBehaviour
             {
                 m_Plants[i].health = CalculateViability(m_Plants[i]);
                 CheckIfPlantCanReproduce(m_Plants[i]);
-
             }
         }
         m_AmountOfPlants = m_Plants.Count;
@@ -281,22 +286,30 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private bool CheckIfPlantIsAlive(PlantInfoStruct plant)
     {
-        bool isAlive = true;
-        if (plant.age >= plantSpeciesTable.GetSOByType(plant.type).deathAge)
-        {
-            //die
-            //might have to unregister from the seed manager, but I will look into that later
-            //PlantDies();
-            isAlive = false;
-            RemoveOwnPlantInfoFromQuadCell(plant);
-            m_Plants.Remove(plant);
+        const float e = 2.71828f;
 
-            //TODO implement soil replenishment after death based on data from the plant 
-            return isAlive;
-            
+        // Survival chance based on age uses a sigmoid function to let plants die around their deathAge in a smoothed fashion
+        // f(x) = 1 - (1 / [1 + e ^(deathAge - x))
+        float deathAge = plantSpeciesTable.GetSOByType(plant.type).deathAge;
+        float survivalChanceAge = 1.0f - (1.0f / (1.0f + Mathf.Pow(e, deathAge - plant.age)));
+
+        // Survival chance based on viability uses a sigmoid function to let some but not all of the unviable plants die
+        // f(x) = 1 - (1 / [1 + e ^ (s * (v + x))]    s = sigmoid scale (-12), v = viable viability
+        const float VIABLE_VIABILITY = 0.3f; //< plants below this viability will likely die, plants above will likely live
+        const float VIABILITY_SIGMOID_SCALE = -12.0f;
+        float survivalChanceViability = 1.0f - (1.0f / (1.0f + Mathf.Pow(e, VIABILITY_SIGMOID_SCALE * (VIABLE_VIABILITY - plant.health))));
+
+        float randomValue = Random.value;
+        bool survives = randomValue <= survivalChanceAge * survivalChanceViability;
+        if (survives)
+        {
+            return true;
         }
 
-        return isAlive;
+        RemoveOwnPlantInfoFromQuadCell(plant);
+        m_Plants.Remove(plant);
+
+        return false;
     }
 
     private bool CheckIfPlantCanReproduce(PlantInfoStruct plant)
@@ -313,53 +326,76 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private float CalculateViability(PlantInfoStruct plant)
     {
-        //a simple test of concept with occlusion, flow and temperature
+        const float OCCLUSION_MIN = 0.0f;
+        const float OCCLUSION_MAX = 1.0f;
+        const float FLOW_MIN = 0.0f;
+        const float FLOW_MAX = 1.0f;
+        const float ACIDITY_MIN = 0.0f;
+        const float ACIDITY_MAX = 14.0f;
+
         PlantSpeciesInfoScriptableObject currentPlantSO     = plantSpeciesTable.GetSOByType(plant.type);
-        float overallViability;
-
-        //float occlusionFactor     = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].terrainOcclusion, currentPlantSO.optimalOcclusion);
-        //float flowFactor          = CalculateFactorWithGroundValue(ground[(int)plant.position.x, (int)plant.position.z].waterflow, currentPlantSO.optimalflow);
-        int factorCounter = 0;
         Vector2 terrainBounds = new Vector2(m_TerrainBounds.max.x, m_TerrainBounds.max.z);
-        float groundOcclusionFactor = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain((int)plant.position.x, (int)plant.position.z, terrainBounds).terrainOcclusion;
-        float occlusionFactor       = CalculateFactorWithGroundValue(groundOcclusionFactor, currentPlantSO.optimalOcclusion);
-        factorCounter++;
-       
-        float groundFlowFactor      = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain((int)plant.position.x, (int)plant.position.z, terrainBounds).waterflow;
-        float flowFactor            = CalculateFactorWithGroundValue(groundFlowFactor, currentPlantSO.optimalflow);
-        factorCounter++;
+        GroundInfoStruct groundInfo = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain((int)plant.position.x, (int)plant.position.z, terrainBounds);
 
+        // Calculate satisfaction based on following factors
+        float summedSatisfaction = 0.0f;
+        float summedWeights = 0.0f;
 
-        //TODO change this one from local ground to ground array and implement changes to ground values in it
-        float soilTextureValue = 0.0f;
-        if (m_UseSoilTexture)
-        {
-             soilTextureValue = CalculateSoilTextureValue(new Vector2((int)plant.position.x, (int)plant.position.z), currentPlantSO);
-            factorCounter++;
-        }
-
-        float soilCompositionValue = 0.0f;
-        if (m_UseSoilpH)
-        {
-            soilCompositionValue = CalculateSoilCompositionValue(new Vector2((int)plant.position.x, (int)plant.position.z), currentPlantSO);
-            factorCounter++;
-        }
-
+        // 1) Temperature
+        // TODO: For temperature, also use the curve instead of the single prefered value
         float temperatureBasedOnHeight = CalculateTemperatureFactorAtAltitude(Singletons.simulationManager.groundTemperature, currentPlantSO.optimalTemperature, plant);
-        factorCounter++;
+        summedSatisfaction += currentPlantSO.temperatureWeight * temperatureBasedOnHeight;
+        summedWeights += currentPlantSO.temperatureWeight;
+
         if (temperatureBasedOnHeight <= 0.0f)
         {
-            overallViability = 0.0f;
+            // Temperature is the one exception, where a low satisfaction makes the plant completly unviable
+            return 0.0f;
         }
-        else
-        {
 
-            overallViability = ((occlusionFactor * currentPlantSO.occlusionFactorWeight) 
-                + (flowFactor * currentPlantSO.flowFactorWeight) 
-                + (temperatureBasedOnHeight * currentPlantSO.temperatureWeight 
-                + (soilTextureValue * (currentPlantSO.soilTextureWeight + m_AdditionalSoilTextureWeight))
-                + soilCompositionValue * currentPlantSO.soilCompositionWeight)) /(float)factorCounter;
+        // 2) Occlusion (Light/Shadow)
+        //float occlusionFactor       = CalculateSatisfactionWithGround(groundInfo.terrainOcclusion, currentPlantSO.optimalOcclusion);
+        //factorCounter++;
+        summedSatisfaction += currentPlantSO.occlusionFactorWeight * CalculateEnvironmentSatisfaction(groundInfo.terrainOcclusion, currentPlantSO.occlusionSatisfaction, OCCLUSION_MIN, OCCLUSION_MAX);
+        summedWeights += currentPlantSO.occlusionFactorWeight;
+
+        // 3) Flow (Rivers/Sea)
+        //float flowFactor            = CalculateSatisfactionWithGround(groundInfo.waterflow, currentPlantSO.optimalflow);
+        //factorCounter++;
+        summedSatisfaction += currentPlantSO.flowFactorWeight * CalculateEnvironmentSatisfaction(groundInfo.waterflow, currentPlantSO.flowSatisfaction, FLOW_MIN, FLOW_MAX);
+        summedWeights += currentPlantSO.flowFactorWeight;
+
+        // 4) Soil Texture
+        //    float soilTextureValue = 0.0f;
+        //if (m_UseSoilTexture)
+        //{
+        //    soilTextureValue = CalculateSoilTextureValue(new Vector2((int)plant.position.x, (int)plant.position.z), currentPlantSO);
+        //    factorCounter++;
+        //}
+        if (m_UseSoilTexture)
+        {
+            summedSatisfaction += currentPlantSO.soilTextureWeight * CalculateSoilTextureSatisfaction(new Vector2((int)plant.position.x, (int)plant.position.z), currentPlantSO);
+            summedWeights += currentPlantSO.soilTextureWeight;
         }
+
+        // 5) Soil pH
+        //float soilCompositionValue = 0.0f;
+        if (m_UseSoilpH)
+        {
+            summedSatisfaction += currentPlantSO.soilAcidityWeight * CalculateEnvironmentSatisfaction(groundInfo.ph, currentPlantSO.soilAciditySatisfaction, ACIDITY_MIN, ACIDITY_MAX);
+            summedWeights += currentPlantSO.soilAcidityWeight;
+
+            //soilCompositionValue = CalculateSoilCompositionValue(new Vector2((int)plant.position.x, (int)plant.position.z), currentPlantSO);
+            //factorCounter++;
+        }
+
+        Debug.Assert(summedWeights > 0.0f, "No weights given for plant " + currentPlantSO.name);
+        float overallViability = summedSatisfaction / summedWeights;
+        //overallViability = ((occlusionFactor * currentPlantSO.occlusionFactorWeight) 
+        //    + (flowFactor * currentPlantSO.flowFactorWeight) 
+        //    + (temperatureBasedOnHeight * currentPlantSO.temperatureWeight 
+        //    + (soilTextureValue * (currentPlantSO.soilTextureWeight))
+        //    + soilCompositionValue * currentPlantSO.soilAcidityWeight)) /(float)factorCounter;
 
         if (float.IsNaN(overallViability))
         {
@@ -367,36 +403,107 @@ public class SeparatedSimulationManager : MonoBehaviour
             return -1.0f;
         }
 
-
         //TODO check for other plants and reduce viability value if other plants are in the area
         overallViability = AffectedViabilityThroughProximity(plant, overallViability);
 
         return overallViability;
-
-       
     }
 
     private void ScatterSeeds(PlantInfoStruct plant)
     {
+        // health: 60%, max seedlings: 3
+
+        // 0 - 20   -> 3 seedlings
+        // 20 - 40  -> 2 seedlings
+        // 40 - 60  -> 1 seedling
+        // 60 - 80  -> 0 seedlings
+        // 80 - 100
+
+        float randomValue = Random.value;
+        if (randomValue > plant.health)
+        {
+            return;
+        }
+
         PlantSpeciesInfoScriptableObject currentPlantSO = plantSpeciesTable.GetSOByType(plant.type);
-        for (int i = 0; i < currentPlantSO.seedDistributionAmount; i++)
+        int seedlings = Mathf.RoundToInt((randomValue / plant.health) * currentPlantSO.seedDistributionAmount);
+
+        for (int i = 0; i < seedlings; i++)
         {
             Vector2 randomPos = Random.insideUnitCircle * currentPlantSO.maxDistributionDistance;
 
             Vector3 calculatedPos = plant.position + new Vector3(randomPos.x, 0.0f, randomPos.y);
             calculatedPos.y = m_Terrain.SampleHeight(calculatedPos);
-            if (IsCalculatedNewPosWithinTerrainBounds(calculatedPos) && IsOnLand(calculatedPos) && !IsPlantWithinDistanceToOtherPlantsQUADCELL(new Vector2(calculatedPos.x, calculatedPos.z)))
+            RectInt cells = GetCellsFromGrid(new Vector2(calculatedPos.x, calculatedPos.z));
+
+            if (!IsCalculatedNewPosWithinTerrainBounds(calculatedPos))
             {
-               
-                m_IDCounter++;
-                PlantInfoStruct newPlant = new PlantInfoStruct(calculatedPos, m_IDCounter, currentPlantSO);
-                m_Plants.Add(newPlant);
-                SetOwnPlantInfoInQuadCell(newPlant);
-                
+                continue;
             }
 
+            if (!IsOnLand(calculatedPos))
+            {
+                continue;
+            }
+
+            if (IsPlantWithinDistanceToOtherPlantsQUADCELL(new Vector2(calculatedPos.x, calculatedPos.z), cells))
+            {
+                continue;
+            }
+
+            // Reproduce!
+            m_IDCounter++;
+            PlantInfoStruct newPlant = new PlantInfoStruct(calculatedPos, m_IDCounter, currentPlantSO);
+            m_Plants.Add(newPlant);
+            SetOwnPlantInfoInQuadCell(newPlant);
         }
        
+    }
+
+    private RectInt GetCellsFromGrid(Vector2 pos)
+    {
+        //get own QuadCell
+        float positionPercentageX = pos.x / 1024.0f;
+        float positionPercentageY = pos.y / 1024.0f;
+
+        float nonFlooredPosX = positionPercentageX * m_GRID_CELL_DIVISIONS;
+        float nonFlooredPosY = positionPercentageY * m_GRID_CELL_DIVISIONS;
+
+
+        int gridCellX = Mathf.FloorToInt(nonFlooredPosX);
+        int gridCellY = Mathf.FloorToInt(nonFlooredPosY);
+        float percentageWithinCellX = nonFlooredPosX - (float)gridCellX;
+        float percentageWithinCellY = nonFlooredPosY - (float)gridCellY;
+
+        float nextCellRangeMinPercentage = m_DistanceBetweenTrees / (float)m_GRID_CELL_DIVISIONS;
+        float nextCellRangeMaxPercentage = 1.0f - nextCellRangeMinPercentage;
+
+
+        int minX = gridCellX;
+        int maxX = gridCellX;
+        int minY = gridCellY;
+        int maxY = gridCellY;
+
+        //calculate if own pos is within percentage to get neighbouring cells
+        if (percentageWithinCellX < nextCellRangeMinPercentage && gridCellX > 0)
+        {
+            minX--;
+        }
+        else if (percentageWithinCellX > nextCellRangeMaxPercentage && gridCellX < m_GRID_CELL_DIVISIONS - 2)
+        {
+            maxX++;
+        }
+
+        if (percentageWithinCellY < nextCellRangeMinPercentage && gridCellY > 0)
+        {
+            minY--;
+        }
+        else if (percentageWithinCellY > nextCellRangeMaxPercentage && gridCellY < m_GRID_CELL_DIVISIONS - 2)
+        {
+            maxY++;
+        }
+
+        return new RectInt(minX, minY, maxX - minX, maxY - minY);
     }
 
    
@@ -431,61 +538,61 @@ public class SeparatedSimulationManager : MonoBehaviour
         m_PlantGridCells[cell.x, cell.y].Remove(plant);
     }
 
-    private bool IsPlantWithinDistanceToOtherPlantsQUADCELL(Vector2 pos)
+    private bool IsPlantWithinDistanceToOtherPlantsQUADCELL(Vector2 pos, RectInt cells)
     {
         bool withinDistance = false;
 
 
-        //get own QuadCell
-        float positionPercentageX = pos.x / 1024.0f;
-        float positionPercentageY = pos.y / 1024.0f;
+        ////get own QuadCell
+        //float positionPercentageX = pos.x / 1024.0f;
+        //float positionPercentageY = pos.y / 1024.0f;
 
-        float nonFlooredPosX = positionPercentageX * m_GRID_CELL_DIVISIONS;
-        float nonFlooredPosY = positionPercentageY * m_GRID_CELL_DIVISIONS;
-
-
-        int gridCellX = Mathf.FloorToInt(nonFlooredPosX);
-        int gridCellY = Mathf.FloorToInt(nonFlooredPosY);
-        float percentageWithinCellX = nonFlooredPosX - (float)gridCellX;
-        float percentageWithinCellY = nonFlooredPosY - (float)gridCellY;
-
-        float nextCellRangeMinPercentage = m_DistanceBetweenTrees / (float)m_GRID_CELL_DIVISIONS;
-        float nextCellRangeMaxPercentage = 1.0f - nextCellRangeMinPercentage;
+        //float nonFlooredPosX = positionPercentageX * m_GRID_CELL_DIVISIONS;
+        //float nonFlooredPosY = positionPercentageY * m_GRID_CELL_DIVISIONS;
 
 
-        int minX = gridCellX;
-        int maxX = gridCellX;
-        int minY = gridCellY;
-        int maxY = gridCellY;
+        //int gridCellX = Mathf.FloorToInt(nonFlooredPosX);
+        //int gridCellY = Mathf.FloorToInt(nonFlooredPosY);
+        //float percentageWithinCellX = nonFlooredPosX - (float)gridCellX;
+        //float percentageWithinCellY = nonFlooredPosY - (float)gridCellY;
 
-        //calculate if own pos is within percentage to get neighbouring cells
-        if (percentageWithinCellX < nextCellRangeMinPercentage && gridCellX > 0)
-        {
-            minX--;
-        }
-        else if (percentageWithinCellX > nextCellRangeMaxPercentage && gridCellX < m_GRID_CELL_DIVISIONS - 2)
-        {
-            maxX++;
-        }
+        //float nextCellRangeMinPercentage = m_DistanceBetweenTrees / (float)m_GRID_CELL_DIVISIONS;
+        //float nextCellRangeMaxPercentage = 1.0f - nextCellRangeMinPercentage;
 
-        if (percentageWithinCellY < nextCellRangeMinPercentage && gridCellY > 0)
-        {
-            minY--;
-        }
-        else if (percentageWithinCellY > nextCellRangeMaxPercentage && gridCellY < m_GRID_CELL_DIVISIONS - 2)
-        {
-            maxY++;
-        }
 
-        List<PlantInfoStruct>[,] plantCellsToCheck = new List<PlantInfoStruct>[(maxX - minX)+1, (maxY - minY)+1];
+        //int minX = gridCellX;
+        //int maxX = gridCellX;
+        //int minY = gridCellY;
+        //int maxY = gridCellY;
+
+        ////calculate if own pos is within percentage to get neighbouring cells
+        //if (percentageWithinCellX < nextCellRangeMinPercentage && gridCellX > 0)
+        //{
+        //    minX--;
+        //}
+        //else if (percentageWithinCellX > nextCellRangeMaxPercentage && gridCellX < m_GRID_CELL_DIVISIONS - 2)
+        //{
+        //    maxX++;
+        //}
+
+        //if (percentageWithinCellY < nextCellRangeMinPercentage && gridCellY > 0)
+        //{
+        //    minY--;
+        //}
+        //else if (percentageWithinCellY > nextCellRangeMaxPercentage && gridCellY < m_GRID_CELL_DIVISIONS - 2)
+        //{
+        //    maxY++;
+        //}
+
+        //List<PlantInfoStruct>[,] plantCellsToCheck = new List<PlantInfoStruct>[(maxX - minX)+1, (maxY - minY)+1];
 
         //check against plants in these cells
         int counterX = 0;
         int counterY = 0;
-        for (int iY = minY; iY <= maxY; iY++)
+        for (int iY = cells.yMin; iY <= cells.yMax; iY++)
         {
             counterX = 0;
-            for (int iX = minX; iX <= maxX; iX++)
+            for (int iX = cells.xMin; iX <= cells.xMax; iX++)
             {
                 foreach(PlantInfoStruct plant in m_PlantGridCells[iX, iY])
                 {
@@ -512,56 +619,58 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private float AffectedViabilityThroughProximity(PlantInfoStruct givenPlant, float calculatedViability)
     {
-        //get own QuadCell
-        float positionPercentageX = givenPlant.position.x / 1024.0f;
-        float positionPercentageY = givenPlant.position.z / 1024.0f;
+        // TODO;
 
-        float nonFlooredPosX = positionPercentageX * m_GRID_CELL_DIVISIONS;
-        float nonFlooredPosY = positionPercentageY * m_GRID_CELL_DIVISIONS;
+        ////get own QuadCell
+        //float positionPercentageX = givenPlant.position.x / 1024.0f;
+        //float positionPercentageY = givenPlant.position.z / 1024.0f;
 
-
-        int gridCellX = Mathf.FloorToInt(nonFlooredPosX);
-        int gridCellY = Mathf.FloorToInt(nonFlooredPosY);
-        float percentageWithinCellX = nonFlooredPosX - (float)gridCellX;
-        float percentageWithinCellY = nonFlooredPosY - (float)gridCellY;
-
-        float nextCellRangeMinPercentage = m_DistanceBetweenTrees / (float)m_GRID_CELL_DIVISIONS;
-        float nextCellRangeMaxPercentage = 1.0f - nextCellRangeMinPercentage;
+        //float nonFlooredPosX = positionPercentageX * m_GRID_CELL_DIVISIONS;
+        //float nonFlooredPosY = positionPercentageY * m_GRID_CELL_DIVISIONS;
 
 
-        int minX = gridCellX;
-        int maxX = gridCellX;
-        int minY = gridCellY;
-        int maxY = gridCellY;
+        //int gridCellX = Mathf.FloorToInt(nonFlooredPosX);
+        //int gridCellY = Mathf.FloorToInt(nonFlooredPosY);
+        //float percentageWithinCellX = nonFlooredPosX - (float)gridCellX;
+        //float percentageWithinCellY = nonFlooredPosY - (float)gridCellY;
 
-        //calculate if own pos is within percentage to get neighbouring cells
-        if (percentageWithinCellX < nextCellRangeMinPercentage && gridCellX > 0)
-        {
-            minX--;
-        }
-        else if (percentageWithinCellX > nextCellRangeMaxPercentage && gridCellX < m_GRID_CELL_DIVISIONS - 2)
-        {
-            maxX++;
-        }
+        //float nextCellRangeMinPercentage = m_DistanceBetweenTrees / (float)m_GRID_CELL_DIVISIONS;
+        //float nextCellRangeMaxPercentage = 1.0f - nextCellRangeMinPercentage;
 
-        if (percentageWithinCellY < nextCellRangeMinPercentage && gridCellY > 0)
-        {
-            minY--;
-        }
-        else if (percentageWithinCellY > nextCellRangeMaxPercentage && gridCellY < m_GRID_CELL_DIVISIONS - 2)
-        {
-            maxY++;
-        }
+
+        //int minX = gridCellX;
+        //int maxX = gridCellX;
+        //int minY = gridCellY;
+        //int maxY = gridCellY;
+
+        ////calculate if own pos is within percentage to get neighbouring cells
+        //if (percentageWithinCellX < nextCellRangeMinPercentage && gridCellX > 0)
+        //{
+        //    minX--;
+        //}
+        //else if (percentageWithinCellX > nextCellRangeMaxPercentage && gridCellX < m_GRID_CELL_DIVISIONS - 2)
+        //{
+        //    maxX++;
+        //}
+
+        //if (percentageWithinCellY < nextCellRangeMinPercentage && gridCellY > 0)
+        //{
+        //    minY--;
+        //}
+        //else if (percentageWithinCellY > nextCellRangeMaxPercentage && gridCellY < m_GRID_CELL_DIVISIONS - 2)
+        //{
+        //    maxY++;
+        //}
 
 
         int countOfTreesInProximity = 0;
         //check against plants in these cells
         int counterX = 0;
         int counterY = 0;
-        for (int iY = minY; iY <= maxY; iY++)
+        for (int iY = givenPlant.affectedCells.yMin; iY <= givenPlant.affectedCells.yMax; iY++)
         {
             counterX = 0;
-            for (int iX = minX; iX <= maxX; iX++)
+            for (int iX = givenPlant.affectedCells.xMin; iX <= givenPlant.affectedCells.xMax; iX++)
             {
                 foreach (PlantInfoStruct plant in m_PlantGridCells[iX, iY])
                 {
@@ -617,21 +726,59 @@ public class SeparatedSimulationManager : MonoBehaviour
     }
 
    
-    private float CalculateFactorWithGroundValue(float groundValue, float wantedValue)
+    private float CalculateSatisfactionWithGround(float groundValue, float wantedValue)
     {
-        groundValue = Mathf.Clamp(groundValue, 0.0f, wantedValue * 2.0f);
-        //return Mathf.Clamp01((1.0f - Mathf.Abs(1.0f - (groundValue / wantedValue))));
-        float result =  (Mathf.Abs(wantedValue - Mathf.Abs(wantedValue - groundValue))) / wantedValue;
+        // 1         .''.
+        // |       .'    '.
+        // |     .'        '.
+        // |   .'            '.
+        // 0   0      1w      2w    (w = wantedValue)
+        //
+        // for 0 <= groundValue <= wantedValue                  | returns [0, 1] with linear interpolation
+        // for wantedValue <= groundValue <= 2 * wanted value   | returns [1, 0] with linear interpolation
+
+        float groundValueClamped = Mathf.Clamp(groundValue, 0.0f, wantedValue * 2.0f);
+        float result = (Mathf.Abs(wantedValue - Mathf.Abs(wantedValue - groundValueClamped))) / wantedValue;
         return result;
     }
 
-    private float CalculateAcidtyFactor(float groundValue, float wantedValue)
+    private float CalculateAcidtyFactor(float groundPh, float desiredPh)
     {
-        float result = (Mathf.Abs(wantedValue - Mathf.Abs(wantedValue - groundValue))) / wantedValue;
+        float result = (Mathf.Abs(desiredPh - Mathf.Abs(desiredPh - groundPh))) / desiredPh;
         return result;
     }
 
-  
+    private float CalculateEnvironmentSatisfaction(float currentValue, AnimationCurve satisfactionCurve, float minValue, float maxValue)
+    {
+        float currentPercentage = Mathf.InverseLerp(minValue, maxValue, currentValue);
+        return satisfactionCurve.Evaluate(currentPercentage);
+    }
+
+    private float CalculateSoilTextureSatisfaction(Vector2 pos, PlantSpeciesInfoScriptableObject plantSO)
+    {
+        const float MAP_MIN_VALUE = 0.0f;
+        const float MAP_MAX_VALUE = 100.0f;
+
+        // Calculates summed average of the three soil texture satisfactions based on their weights
+
+        Vector2 terrainBounds = new Vector2(m_Terrain.terrainData.bounds.max.x, m_Terrain.terrainData.bounds.max.z);
+        GroundInfoStruct groundInfo = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, terrainBounds);
+
+        float summedSatisfaction = 0.0f;
+        float summedWeights = 0.0f;
+
+        summedSatisfaction += plantSO.soilTextureWeight_Clay * CalculateEnvironmentSatisfaction(groundInfo.clay, plantSO.soilTextureSatisfaction_Clay, MAP_MIN_VALUE, MAP_MAX_VALUE);
+        summedSatisfaction += plantSO.soilTextureWeight_Sand * CalculateEnvironmentSatisfaction(groundInfo.sand, plantSO.soilTextureSatisfaction_Sand, MAP_MIN_VALUE, MAP_MAX_VALUE);
+        summedSatisfaction += plantSO.soilTextureWeight_Silt * CalculateEnvironmentSatisfaction(groundInfo.silt, plantSO.soilTextureSatisfaction_Silt, MAP_MIN_VALUE, MAP_MAX_VALUE);
+
+        summedWeights += plantSO.soilTextureWeight_Clay;
+        summedWeights += plantSO.soilTextureWeight_Sand;
+        summedWeights += plantSO.soilTextureWeight_Silt;
+
+        Debug.Assert(summedWeights > 0.0f, "No soil weights given for plant " + plantSO.name);
+        return summedSatisfaction / summedWeights;
+    }
+
 
     public bool TickGround()
     {
@@ -645,56 +792,44 @@ public class SeparatedSimulationManager : MonoBehaviour
         float[] values = new float[3];
         float clayValue = GetValueFromSoilCompositionMap(m_ClayMap, pos);
         float preferredClayValue = plantSO.preferredClayValue;
-        float clayFactor = CalculateFactorWithGroundValue(clayValue, preferredClayValue);
+        float clayFactor = CalculateSatisfactionWithGround(clayValue, preferredClayValue);
 
         float sandValue = GetValueFromSoilCompositionMap(m_SandMap, pos);
         float preferredSandValue = plantSO.preferredSandValue;
-        float sandFactor = CalculateFactorWithGroundValue(sandValue, preferredSandValue);
+        float sandFactor = CalculateSatisfactionWithGround(sandValue, preferredSandValue);
 
         float siltValue = GetValueFromSoilCompositionMap(m_SiltMap, pos);
         float preferredSiltValue = plantSO.preferredSiltValue;
-        float siltFactor = CalculateFactorWithGroundValue(siltValue, preferredSiltValue);
+        float siltFactor = CalculateSatisfactionWithGround(siltValue, preferredSiltValue);
 
         return values;
     }
 
-    private float CalculateSoilTextureValue(Vector2 pos, PlantSpeciesInfoScriptableObject plantSO)
-    {
-        float soilViabilityValue    = 0.0f;
-        Vector2 terrainBounds = new Vector2(m_Terrain.terrainData.bounds.max.x, m_Terrain.terrainData.bounds.max.z); 
-        
-        //ground info array version 
-        float clayValueFromGround               = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, terrainBounds).clay;
-        float preferredClayValueFromGround      = plantSO.preferredClayValue;
-        float clayFactorFromGround              = CalculateFactorWithGroundValue(clayValueFromGround, preferredClayValueFromGround);
+    //private float CalculateSoilTextureValue(Vector2 pos, PlantSpeciesInfoScriptableObject plantSO)
+    //{
+    //    // Soil texture viability is average of clay, sand and silt satisfaction
 
-        float sandValueFromGround               = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, terrainBounds).sand;
-        float preferredSandValueFromGround      = plantSO.preferredSandValue;
-        float sandFactorFromGround              = CalculateFactorWithGroundValue(sandValueFromGround, preferredSandValueFromGround);
+    //    Vector2 terrainBounds = new Vector2(m_Terrain.terrainData.bounds.max.x, m_Terrain.terrainData.bounds.max.z);
+    //    GroundInfoStruct groundInfo = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, terrainBounds);
 
-        float siltValueFromGround               = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, terrainBounds).silt;
-        float preferredSiltValueFromGround      = plantSO.preferredSiltValue;
-        float siltFactorFromGround              = CalculateFactorWithGroundValue(siltValueFromGround, preferredSiltValueFromGround);
-        //update each map on what was taken 
-        //WriteValueToTexture(m_ClayMapCopied, plantSO.takenClayValue, clayValue, pos);
+    //    float clayFactorFromGround = CalculateSatisfactionWithGround(groundInfo.clay, plantSO.preferredClayValue);
+    //    float sandFactorFromGround = CalculateSatisfactionWithGround(groundInfo.sand, plantSO.preferredSandValue);
+    //    float siltFactorFromGround = CalculateSatisfactionWithGround(groundInfo.silt, plantSO.preferredSiltValue);
 
-        soilViabilityValue = (clayFactorFromGround + sandFactorFromGround + siltFactorFromGround) % 3.0f;
-        return soilViabilityValue;
-    }
+    //    float soilViabilityValue = (clayFactorFromGround + sandFactorFromGround + siltFactorFromGround) / 3.0f;
+    //    return soilViabilityValue;
+    //}
 
-    private float CalculateSoilCompositionValue(Vector2 pos, PlantSpeciesInfoScriptableObject plantSO)
-    {
-        float soilCompositionValue = 0.0f;
 
-        //use acidity map information stored in the ground infos and acidity values from the plant type to get this bread
-        float acidityValueFromGround = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, new Vector2(m_TerrainBounds.max.x, m_TerrainBounds.max.z)).ph;
-        float preferredAcidityValue = plantSO.preferredAcidityValue;
-        float acidityFactor = CalculateAcidtyFactor(acidityValueFromGround, preferredAcidityValue);
+    //private float CalculateSoilCompositionValue(Vector2 pos, PlantSpeciesInfoScriptableObject plantSO)
+    //{
+    //    // Use acidity map information stored in the ground infos and acidity values from the plant type to get this bread
 
-        soilCompositionValue = acidityFactor;
-        //this map is actually the only one that can be updated
-        return soilCompositionValue;
-    }
+    //    GroundInfoStruct groundInfo = m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain(pos.x, pos.y, new Vector2(m_TerrainBounds.max.x, m_TerrainBounds.max.z));
+
+    //    return CalculateAcidtyFactor(groundInfo.ph, plantSO.preferredAcidityValue);
+    //}
+
     private float GetValueFromSoilCompositionMap(Texture2D texture,Vector2 pos)
     {
         int posXOnTex = (int)((pos.x / m_Terrain.terrainData.bounds.max.x) * texture.width);
@@ -728,60 +863,116 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private void EvaluateSimulation()
     {
-        
-     
-        const float MINIMUM_INFLUENCE_TO_COUNT_AS_DOMINANT = 1.0f;
+        const float MINIMUM_INFLUENCE_TO_COUNT_AS_DOMINANT = 0.01f;
 
         // Find dominant species for every position on the map
 
         // I) For each plant, mark the fields in its influence
         float[,,] plantDominance = new float[m_MAP_SIZE, m_MAP_SIZE, (int)PlantType.Count];
+        float[,,] plantViability = new float[m_MAP_SIZE, m_MAP_SIZE, (int)PlantType.Count];
+        float[,,] plantViabilityWeights = new float[m_MAP_SIZE, m_MAP_SIZE, (int)PlantType.Count];
+
         foreach (PlantInfoStruct plant in m_Plants)
         {
             Vector2 plantPosition2D = new Vector2(plant.position.x, plant.position.z);
-            float dominanceValue = CalculatePlantDominanceValue(plant);
             float influenceRadius = CalculatePlantInfluenceRadius(plant);
             if (influenceRadius <= 0.0f)
             {
-                Debug.LogError("Plant " + plant.id + " has no influence at all. How did that happen?");
                 continue;
             }
 
-            RectInt influencedIndices = GetInfluencedRect(plantPosition2D, influenceRadius);
-            for (int iY = influencedIndices.min.y; iY < influencedIndices.max.y; iY++)
+            // Dominance
             {
-                for (int iX = influencedIndices.min.x; iX < influencedIndices.max.x; iX++)
+                float dominanceValue = CalculatePlantDominanceValue(plant);
+                RectInt influencedIndices = GetInfluencedRect(plantPosition2D, influenceRadius);
+
+                for (int iY = influencedIndices.min.y; iY < influencedIndices.max.y; iY++)
                 {
-                    if (iX < 0 || iX >= m_MAP_SIZE || iY < 0 || iY >= m_MAP_SIZE)
+                    for (int iX = influencedIndices.min.x; iX < influencedIndices.max.x; iX++)
                     {
-                        continue;
-                    }
+                        if (iX < 0 || iX >= m_MAP_SIZE || iY < 0 || iY >= m_MAP_SIZE)
+                        {
+                            continue;
+                        }
 
-                    if (!IsOnLand(new Vector3(iX, 0, iY)))
+                        if (!IsOnLand(new Vector3(iX, 0, iY)))
+                        {
+                            continue;
+                        }
+
+                        float distance = Vector2.Distance(plantPosition2D, new Vector2(iX, iY));
+                        if (distance > influenceRadius)
+                        {
+                            continue;
+                        }
+
+                        if (plant.type >= PlantType.Count)
+                        {
+                            Debug.LogError("Plant " + plant.id + " has invalid plant type: " + plant.type);
+                            continue;
+                        }
+
+                        float distancePercentage = 1.0f - (distance / influenceRadius);
+                        plantDominance[iX, iY, (int)plant.type] += distancePercentage * dominanceValue;
+                    }
+                }
+            }
+
+            {
+                // Viability
+                float viabilityValue = plant.health;
+                const float VIABILITY_VISUALIZATION_RADIUS = 5.0f;
+                RectInt viabilityIndices = GetInfluencedRect(plantPosition2D, VIABILITY_VISUALIZATION_RADIUS);
+
+                // Dominance
+                for (int iY = viabilityIndices.min.y; iY < viabilityIndices.max.y; iY++)
+                {
+                    for (int iX = viabilityIndices.min.x; iX < viabilityIndices.max.x; iX++)
                     {
-                        continue; //< TODO: Consider if we want this
-                    }
+                        if (iX < 0 || iX >= m_MAP_SIZE || iY < 0 || iY >= m_MAP_SIZE)
+                        {
+                            continue;
+                        }
 
-                    float distance = Vector2.Distance(plantPosition2D, new Vector2(iX, iY));
-                    if (distance > influenceRadius)
-                    {
-                        continue;
-                    }
+                        if (!IsOnLand(new Vector3(iX, 0, iY)))
+                        {
+                            continue;
+                        }
 
-                    float distancePercentage = 1.0f - (distance / influenceRadius);
-                    plantDominance[iX, iY, (int)plant.type] += distancePercentage * dominanceValue;
+                        float distance = Vector2.Distance(plantPosition2D, new Vector2(iX, iY));
+                        if (distance > VIABILITY_VISUALIZATION_RADIUS)
+                        {
+                            continue;
+                        }
+
+                        if (plant.type >= PlantType.Count)
+                        {
+                            Debug.LogError("Plant " + plant.id + " has invalid plant type: " + plant.type);
+                            continue;
+                        }
+
+                        float distancePercentage = 1.0f - (distance / VIABILITY_VISUALIZATION_RADIUS);
+                        plantViability[iX, iY, (int)plant.type] += distancePercentage * viabilityValue;
+                        plantViabilityWeights[iX, iY, (int)plant.type] += distancePercentage;
+                    }
                 }
             }
         }
 
         // 2) Build a map of which plant is the most influential at every point
-        PlantType?[,] dominantPlantType = new PlantType?[m_MAP_SIZE, m_MAP_SIZE];
+        //PlantType?[,] dominantPlantType = new PlantType?[m_MAP_SIZE, m_MAP_SIZE];
         Color[] dominantPlantColors = new Color[m_MAP_SIZE * m_MAP_SIZE];
+        Color[][] occurancePlantColors = new Color[(int)PlantType.Count][];
+        for (int iP = 0; iP < (int)PlantType.Count; iP++)
+        {
+            occurancePlantColors[iP] = new Color[m_MAP_SIZE * m_MAP_SIZE];
+        }
 
         for (int iY = 0; iY < m_MAP_SIZE; iY++)
         {
             for (int iX = 0; iX < m_MAP_SIZE; iX++)
             {
+                // Dominance
                 float highestDominanceValue = 0.0f;
                 for (int iP = 0; iP < (int)PlantType.Count; iP++)
                 {
@@ -790,7 +981,7 @@ public class SeparatedSimulationManager : MonoBehaviour
                         highestDominanceValue = plantDominance[iX, iY, iP];
                         if (highestDominanceValue >= MINIMUM_INFLUENCE_TO_COUNT_AS_DOMINANT)
                         {
-                            dominantPlantType[iX, iY] = (PlantType)iP;
+                            //dominantPlantType[iX, iY] = (PlantType)iP;
                             dominantPlantColors[iY * m_MAP_SIZE + iX] = plantSpeciesTable.GetSOByType((PlantType)iP).typeColor;
                         }
                     }
@@ -800,24 +991,47 @@ public class SeparatedSimulationManager : MonoBehaviour
                 {
                     dominantPlantColors[iY * m_MAP_SIZE + iX] = Color.gray;
                 }
+
+                // Occurance
+                for (int iP = 0; iP < (int)PlantType.Count; iP++)
+                {
+                    float weights = plantViabilityWeights[iX, iY, iP];
+                    if (weights > 0)
+                    {
+                        float occuranceValue01 = plantViability[iX, iY, iP] / weights;
+                        occurancePlantColors[iP][iY * m_MAP_SIZE + iX] = Color.Lerp(Color.white, Color.black, occuranceValue01);
+                    }
+                    else
+                    {
+                        occurancePlantColors[iP][iY * m_MAP_SIZE + iX] = Color.blue;
+                    }
+                }
             }
         }
 
-        // 3) Save map
+        // 3) Save maps
+        string circumstancesPath = "initPA_" + m_InitialPlantAmount + "_dist_" + m_DistanceBetweenTrees + "/";
+        string dirPath = Application.dataPath + "/../Generated/" + circumstancesPath + "/" + simulationString + "/";
+
+        // I) Dominance map
+        string filePathDominance = dirPath + "dominanceMap_" + "_simCount" + m_CurrentSimCounter + "_iteration" + m_CurrentIterationCounter + ".png";
         Texture2D dominanceMap = new Texture2D(m_MAP_SIZE, m_MAP_SIZE);
         dominanceMap.SetPixels(0, 0, m_MAP_SIZE, m_MAP_SIZE, dominantPlantColors);
-        byte[] dominanceMapBytes = dominanceMap.EncodeToPNG();
-        string circumstancesPath = "initPA_" + m_InitialPlantAmount + "_dist_" + m_DistanceBetweenTrees +"/";
-        string dirPath = Application.dataPath + "/../Generated/" + circumstancesPath;
-        string timeString = System.DateTime.Now.Day + "-" + System.DateTime.Now.Month + "_" + System.DateTime.Now.Hour + "-" + System.DateTime.Now.Minute;
-        string filePath = dirPath + "dominanceMap_" + timeString + "_simCount" + m_CurrentSimCounter + "_iteration" + m_CurrentIterationCounter + ".png";
         if (!Directory.Exists(dirPath))
         {
             Directory.CreateDirectory(dirPath);
         }
-        File.WriteAllBytes(filePath, dominanceMapBytes);
-    }
+        File.WriteAllBytes(filePathDominance, dominanceMap.EncodeToPNG());
 
+        // II) Occurance maps
+        for (int iP = 0; iP < (int)PlantType.Count; iP++)
+        {
+            string filePathOccurance = dirPath + "occuranceMap_" + iP + plantSpeciesTable.GetSOByType((PlantType)iP).name + "_" + "_simCount" + m_CurrentSimCounter + "_iteration" + m_CurrentIterationCounter + ".png";
+            Texture2D occuranceMap = new Texture2D(m_MAP_SIZE, m_MAP_SIZE);
+            occuranceMap.SetPixels(0, 0, m_MAP_SIZE, m_MAP_SIZE, occurancePlantColors[iP]);
+            File.WriteAllBytes(filePathOccurance, occuranceMap.EncodeToPNG());
+        }
+    }
 
 
     private void RenderAllTrees()
@@ -863,17 +1077,14 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     private float CalculatePlantInfluenceRadius(PlantInfoStruct plant)
     {
-        // TODO: Proper calculation
-
         const float BASE_INFLUENCE = 2.5f;
-        const float RADIUS_INCREASE_PER_YEAR = 0.2f;
+        const float RADIUS_INCREASE_PER_YEAR = 0.05f;
 
         return (BASE_INFLUENCE + RADIUS_INCREASE_PER_YEAR * plant.age) * plant.health;
     }
 
     private float CalculatePlantDominanceValue(PlantInfoStruct plant)
     {
-        // TODO: Proper calculation
         float ageInfluence = 0.0f;
         int deathAge = plantSpeciesTable.GetSOByType(plant.type).deathAge;
         float primeAge = deathAge * m_PlantPrimeAgePercentage;

@@ -120,10 +120,10 @@ public class GroundInfoManager : MonoBehaviour
                 m_GroundInfoStructArray[currentInfo].sand = (m_SandMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).g * 256.0f) /*/ m_MaxValueSand*/;
                 m_GroundInfoStructArray[currentInfo].silt = (m_SiltMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).b * 256.0f) /*/ m_MaxValueSilt*/;
                 
-                if(m_GroundInfoStructArray[currentInfo].clay > 0.0f)
-                {
-                    Debug.Log("hurray, clay is big!" + currentInfo);
-                }
+                //if(m_GroundInfoStructArray[currentInfo].clay > 0.0f)
+                //{
+                //    //Debug.Log("hurray, clay is big!" + currentInfo);
+                //}
                 //these maps should be smaller and need new pixel positions
                 //TODO
                

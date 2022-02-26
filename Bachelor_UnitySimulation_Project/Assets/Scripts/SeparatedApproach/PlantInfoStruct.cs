@@ -8,26 +8,26 @@ using UnityEngine;
 
 public enum PlantType
 {
-    TestPlantA,
-    TestPlantB,
-    Abies,
+    //TestPlantA,
+    //TestPlantB,
+    //Abies,
     Alnus,
     Betula,
     Carpinus,
     Castanea,
-    Conifers,
+    //Conifers,
     Eucalyptus,
     Fagus,
     Fraxinus,
     Larix,
-    Broadleaved,
-    PinusMisc,
-    QuercusMisc,
+    //Broadleaved,
+    //PinusMisc,
+    //QuercusMisc,
     Picea,
     PinusPinaster,
     PinusSylestris,
     Populus,
-    PseudotsugaMenziesii,
+    //PseudotsugaMenziesii,
     QuercusRoburEtPetraea,
     Robinia,
     Count
@@ -59,6 +59,7 @@ public class PlantInfoStruct
 
     public int id;
     public PlantType type;
+    public RectInt affectedCells;
     
 
     public PlantInfoStruct(Vector3 POS, int ID, PlantSpeciesInfoScriptableObject plantSpecies)

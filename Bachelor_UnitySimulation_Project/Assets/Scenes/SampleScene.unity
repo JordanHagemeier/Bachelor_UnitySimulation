@@ -617,17 +617,16 @@ MonoBehaviour:
   m_StartingIteration: 0
   m_SimulationAmount: 10
   m_CurrentSimCounter: 0
-  m_IterationsPerSimulation: 500
+  m_IterationsPerSimulation: 121
   m_CurrentIterationCounter: 0
   m_TimeTillOneYearIsOver: 0
   timer: 0
-  m_EvaluationAtIterations: 50
+  m_EvaluateAtIterationID: 01000000050000000a0000000f000000190000001e00000023000000280000002d0000003200000037000000410000004d0000005a0000006f00000078000000
   m_Plants: []
   m_AmountOfPlants: 0
   m_MaxPlantSize: 0
   m_InitialPlantAmount: 400
   plantSpecies:
-  - {fileID: 11400000, guid: c776fb717195a66478dd4663716a1cc5, type: 2}
   - {fileID: 11400000, guid: ca2153ac9c03fec45bbc0d9105ab53b2, type: 2}
   - {fileID: 11400000, guid: fdaaf74d60e97cd4e9de078aab97e701, type: 2}
   - {fileID: 11400000, guid: 5b5c4cd2fc8e0fa49a3ab3209ae64196, type: 2}
@@ -640,7 +639,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: d6ac3e4ac729a5c4daf5690583a00fc4, type: 2}
   - {fileID: 11400000, guid: af626eecfedce6b4ab9a72338b4a9477, type: 2}
   - {fileID: 11400000, guid: 855390f775f6ab0469213ea8fc34c358, type: 2}
-  - {fileID: 11400000, guid: 871a1056018028444acf7a0bb911b7ea, type: 2}
   - {fileID: 11400000, guid: 6afe6ed57a0a708468dd9ee049c67d13, type: 2}
   - {fileID: 11400000, guid: a62727651f9ec8a409ea31520a24b7fc, type: 2}
   m_FlowMap: {fileID: 2800000, guid: 215c6b275a1bb134d814ba3af8870373, type: 3}
@@ -650,8 +648,8 @@ MonoBehaviour:
   m_SeaLevelCutOff: 0.99
   m_DistanceBetweenTrees: 1
   m_AdditionalSoilTextureWeight: 0
-  m_UseSoilTexture: 0
-  m_UseSoilpH: 1
+  m_UseSoilTexture: 1
+  m_UseSoilpH: 0
   m_ClayMap: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
   m_SandMap: {fileID: 2800000, guid: 0029b9a387b7f054cb40eb868d945d99, type: 3}
   m_SiltMap: {fileID: 2800000, guid: b916f36ddd4b9a941939d9f9c0f5b0fa, type: 3}
