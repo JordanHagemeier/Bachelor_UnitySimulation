@@ -231,9 +231,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Terrain: {fileID: 74521680}
-  m_OcclusionMap: {fileID: 2800000, guid: 161bb2be6fb3a944bb3840d5ad15ff97, type: 3}
-  m_FlowMap: {fileID: 2800000, guid: 4b1de75406d7fd14faff16716078ee4b, type: 3}
-  m_TestMap: {fileID: 2800000, guid: f342f1c526c109c4891c871bbfa16e9a, type: 3}
+  m_OcclusionMap: {fileID: 0}
+  m_FlowMap: {fileID: 0}
+  m_TestMap: {fileID: 0}
   m_TerrainMaterial: {fileID: 2100000, guid: e27dfd536aa26ba42b9d3b9074fa4826, type: 2}
   m_TerrainDivisionAmount: 0
   m_GroundTemperature: 15
@@ -277,7 +277,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 228600921}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e276432119d16504aa9fffacdac756c4, type: 3}
   m_Name: 
@@ -528,11 +528,11 @@ MonoBehaviour:
   m_AdditionalSoilTextureWeight: 0
   m_UseSoilTexture: 1
   m_UseSoilpH: 0
-  m_ClayMap: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
-  m_SandMap: {fileID: 2800000, guid: 0029b9a387b7f054cb40eb868d945d99, type: 3}
-  m_SiltMap: {fileID: 2800000, guid: b916f36ddd4b9a941939d9f9c0f5b0fa, type: 3}
+  m_ClayMap: {fileID: 0}
+  m_SandMap: {fileID: 0}
+  m_SiltMap: {fileID: 0}
   m_RenderAllPlants: 0
-  m_WritingTextureTest: {fileID: 2800000, guid: c912083a5d964de4792252ae94ef0d57, type: 3}
+  m_WritingTextureTest: {fileID: 0}
   m_WritingTextureTestCopy: {fileID: 0}
   m_CopiedPlants: []
   m_GroundInfoManager: {fileID: 1622023712}
