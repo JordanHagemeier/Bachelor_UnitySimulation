@@ -6,6 +6,7 @@ public struct CopiedPlantInfo
 {
     public Matrix4x4 renderData;
     public Material material;
+    public Color color;
 }
 
 public class VisualizationManager : MonoBehaviour
@@ -13,9 +14,9 @@ public class VisualizationManager : MonoBehaviour
     private Dictionary<int, GameObject> IDToPlantsGOMap;
     SeparatedSimulationManager m_SimManager;
     [SerializeField] private Mesh m_InstancedMesh;
-    [SerializeField] private Material m_InstancedMaterial;
-    [SerializeField] private Material m_TypeAInstancedMaterial;
-    [SerializeField] private Material m_TypeBInstancedMaterial;
+    //[SerializeField] private Material m_InstancedMaterial;
+    //[SerializeField] private Material m_TypeAInstancedMaterial;
+    //[SerializeField] private Material m_TypeBInstancedMaterial;
 
     private bool m_PlantsHaveBeenUpdated = false;
     private PlantInfoStruct[] m_CopiedPlants; public PlantInfoStruct[] copiedPlants { set { m_CopiedPlants = value; m_PlantsHaveBeenUpdated = true; } }
@@ -63,6 +64,7 @@ public class VisualizationManager : MonoBehaviour
             info.renderData         = Matrix4x4.Translate(m_CopiedPlants[i].position);
             info.renderData         = info.renderData * Matrix4x4.Scale(new Vector3(m_CopiedPlants[i].health, m_CopiedPlants[i].health, m_CopiedPlants[i].health) * m_CopiedPlants[i].age * growthWithSizeLimit * m_ScaleFactor);
             info.material           = m_PlantSpeciesTable.GetSOByType(m_CopiedPlants[i].type).ownMaterial;
+            info.color              = m_PlantSpeciesTable.GetSOByType(m_CopiedPlants[i].type).typeColor;
 
             m_ListOfMatrixArrays[(int)m_CopiedPlants[i].type].Add(info);
         }
@@ -77,6 +79,7 @@ public class VisualizationManager : MonoBehaviour
             {
                 List<CopiedPlantInfo> currentList   = m_ListOfMatrixArrays[i];
 
+                currentList[0].material.color = currentList[0].color;
                 Matrix4x4[] matrices                = new Matrix4x4[currentList.Count];
                 for(int j = 0; j < matrices.Length; j++)
                 {

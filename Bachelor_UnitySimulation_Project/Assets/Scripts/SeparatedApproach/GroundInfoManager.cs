@@ -81,7 +81,7 @@ public class GroundInfoManager : MonoBehaviour
         GroundInfoStruct groundInfo;
 
         //the map is 1024 x 1024
-        //we get the position of the plant x and y 
+        //get the position of the plant x and y 
         //translation of that position onto a two dimensional position within our width and height for the ground 
         // get index in one dimension
         //lookup ground info in array 
@@ -116,16 +116,11 @@ public class GroundInfoManager : MonoBehaviour
 
                 //all of these maps have the same size
  
-                m_GroundInfoStructArray[currentInfo].clay = (m_ClayMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).r * 256.0f) /*/ m_MaxValueClay*/;
-                m_GroundInfoStructArray[currentInfo].sand = (m_SandMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).g * 256.0f) /*/ m_MaxValueSand*/;
-                m_GroundInfoStructArray[currentInfo].silt = (m_SiltMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).b * 256.0f) /*/ m_MaxValueSilt*/;
+                m_GroundInfoStructArray[currentInfo].clay = (m_ClayMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).r * 256.0f);
+                m_GroundInfoStructArray[currentInfo].sand = (m_SandMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).g * 256.0f);
+                m_GroundInfoStructArray[currentInfo].silt = (m_SiltMap.GetPixel(pixelPosXOnMap, pixelPosYOnMap).b * 256.0f);
                 
-                //if(m_GroundInfoStructArray[currentInfo].clay > 0.0f)
-                //{
-                //    //Debug.Log("hurray, clay is big!" + currentInfo);
-                //}
-                //these maps should be smaller and need new pixel positions
-                //TODO
+             
                
                 int pixelPosXOnMapSmall = (int)(percentageX * m_OcclusionMap.width);
 
@@ -233,20 +228,14 @@ public class GroundInfoManager : MonoBehaviour
             GameObject currentDebuggingObject = Instantiate(m_DebuggingObject);
             currentDebuggingObject.transform.position = new Vector3(m_GroundInfoStructArray[i].posX / 7.0f, 20.0f, m_GroundInfoStructArray[i].posY / 7.0f);
             currentDebuggingObject.GetComponent<Renderer>().material = m_DebuggingMaterial;
-            //currentDebuggingObject.GetComponent<Renderer>().material.color = Color.blue;
-            //currentDebuggingObject.GetComponent<Renderer>().material.color = new Color(((1.0f / width) * row), 0.0f, ((1.0f / height) * column), 1.0f);
-            //Debug.Log("r " + ((1.0f / width) * row) + ", b " + ((1.0f / height) * column) + " at " + row + "/" + column);
-
-
+            
             // row is [0; height -1]
             // column is [0; width -1]
             float xPercentage = 1.0f / (width - 1) * column; // col / (width -1)
             float yPercentage = 1.0f / (height - 1) * row;
 
             currentDebuggingObject.GetComponent<Renderer>().material.color = new Color(m_GroundInfoStructArray[i].ph, m_GroundInfoStructArray[i].ph, m_GroundInfoStructArray[i].ph);
-            //currentDebuggingObject.GetComponent<Renderer>().material.color = new Color(xPercentage, 0.0f, yPercentage, 1.0f);
-            //Debug.Log("r " + xPercentage + ", b " + yPercentage + " at " + row + "/" + column);
-
+       
         }
     }
 

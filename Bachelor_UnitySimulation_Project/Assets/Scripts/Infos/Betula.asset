@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_PlantType: 1
   m_OwnSpeciesPrefab: {fileID: 2805257265314284349, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
-  m_OwnMaterial: {fileID: 2100000, guid: b2ae8c08dd1f2ac44a5bc77d2c5587bc, type: 2}
+  m_OwnMaterial: {fileID: 2100000, guid: 55bf10d412a49c54b9854926bf60f0cb, type: 2}
   m_TypeColor: {r: 1, g: 0.77220356, b: 0, a: 1}
   m_MaturityAge: 10
   m_DeathAge: 100
@@ -242,12 +242,21 @@ MonoBehaviour:
     m_RotationOrder: 4
   m_SoilTextureWeight_Sand: 1
   m_PreferredAcidityValue: 5.5
-  m_SoilAcidityWeight: 0
+  m_SoilAcidityWeight: 0.3
   m_SoilAciditySatisfaction:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 136
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.21
       value: 0
       inSlope: 0
       outSlope: 0
@@ -265,7 +274,7 @@ MonoBehaviour:
       inWeight: 0.33333334
       outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.66
+      time: 0.64
       value: 0
       inSlope: 0
       outSlope: 0

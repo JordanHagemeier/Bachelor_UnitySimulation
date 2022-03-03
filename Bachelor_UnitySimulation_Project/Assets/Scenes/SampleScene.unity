@@ -209,7 +209,6 @@ GameObject:
   m_Component:
   - component: {fileID: 228600923}
   - component: {fileID: 228600922}
-  - component: {fileID: 228600924}
   - component: {fileID: 228600925}
   - component: {fileID: 228600926}
   m_Layer: 0
@@ -257,126 +256,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &228600924
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 228600921}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 16fa477287cc27943a98ec86acf48afe, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SeedPrefabs:
-  - {fileID: 2127248373}
-  m_AllPlants: []
-  m_SeedChunkLists: []
-  m_InitialOverallSeedAmount: 2
-  m_SeedAmountPerTerrainChunk: 1
-  m_Terrain: {fileID: 0}
-  m_PooledEmptyGOs:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
 --- !u!114 &228600925
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -389,7 +268,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92c6b8c93bcae0b439b84c6209016255, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SeedManager: {fileID: 228600924}
+  m_SeedManager: {fileID: 0}
   m_SimulationManager: {fileID: 228600922}
 --- !u!114 &228600926
 MonoBehaviour:
@@ -593,7 +472,6 @@ GameObject:
   - component: {fileID: 1622023709}
   - component: {fileID: 1622023711}
   - component: {fileID: 1622023712}
-  - component: {fileID: 1622023713}
   m_Layer: 0
   m_Name: SeparatedSimManager
   m_TagString: Untagged
@@ -615,13 +493,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_SimulationSeed: 42
   m_StartingIteration: 0
-  m_SimulationAmount: 10
+  m_SimulationAmount: 3
   m_CurrentSimCounter: 0
-  m_IterationsPerSimulation: 350
+  m_IterationsPerSimulation: 300
   m_CurrentIterationCounter: 0
   m_TimeTillOneYearIsOver: 0
   timer: 0
-  m_EvaluateAtIterationID: 01000000050000000c000000140000001e0000002d000000410000005a00000078000000a0000000d2000000040100004a010000
+  m_EvaluateAtIterationID: 01000000050000000c000000140000001e0000002d000000410000004b000000550000005a000000780000008200000091000000a0000000af000000d2000000e600000004010000220100002c010000
   m_Plants: []
   m_AmountOfPlants: 0
   m_MaxPlantSize: 0
@@ -648,12 +526,12 @@ MonoBehaviour:
   m_SeaLevelCutOff: 0.99
   m_DistanceBetweenTrees: 1
   m_AdditionalSoilTextureWeight: 0
-  m_UseSoilTexture: 0
+  m_UseSoilTexture: 1
   m_UseSoilpH: 0
   m_ClayMap: {fileID: 2800000, guid: 07d6370dc6d04bb4c9f80d605837b211, type: 3}
   m_SandMap: {fileID: 2800000, guid: 0029b9a387b7f054cb40eb868d945d99, type: 3}
   m_SiltMap: {fileID: 2800000, guid: b916f36ddd4b9a941939d9f9c0f5b0fa, type: 3}
-  m_RenderAllPlants: 1
+  m_RenderAllPlants: 0
   m_WritingTextureTest: {fileID: 2800000, guid: c912083a5d964de4792252ae94ef0d57, type: 3}
   m_WritingTextureTestCopy: {fileID: 0}
   m_CopiedPlants: []
@@ -686,10 +564,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_InstancedMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-  m_InstancedMaterial: {fileID: 2100000, guid: c66580a1fcf0db2489de09ceacb9a6ba, type: 2}
-  m_TypeAInstancedMaterial: {fileID: 2100000, guid: b2ae8c08dd1f2ac44a5bc77d2c5587bc, type: 2}
-  m_TypeBInstancedMaterial: {fileID: 2100000, guid: a62e8da5194101042a4d89028ef6f912, type: 2}
-  m_ShowVisualization: 0
+  m_ShowVisualization: 1
   m_ScaleFactor: 0.1
 --- !u!114 &1622023712
 MonoBehaviour:
@@ -720,25 +595,6 @@ MonoBehaviour:
   m_mapWidth: 512
   m_mapHeight: 512
   m_GroundInfoStructArray: []
---- !u!114 &1622023713
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1622023708}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2467f9db5fc923549bad63a9c88a8bd7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_EuropeanDominantSpeciesMap: {fileID: 0}
-  m_SimulatedSpeciesMap: {fileID: 0}
-  m_PlantTypesMapping:
-  - {fileID: 11400000, guid: bd75243368d168c4b917395252c625b3, type: 2}
-  - {fileID: 11400000, guid: 1904901ff38fbe045956f40daedfc98d, type: 2}
-  - {fileID: 11400000, guid: 53913db9ca9b9bf40a7dfab0efd30215, type: 2}
-  simManager: {fileID: 1622023709}
 --- !u!1 &1711725814
 GameObject:
   m_ObjectHideFlags: 0
@@ -834,11 +690,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2127248373 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2805257265314284349, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
-  m_PrefabInstance: {fileID: 2805257265747032264}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2805257265747032264
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -876,6 +727,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2805257265314284337, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
       propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2805257265314284338, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2805257265314284349, guid: 113d09d35d613eb4390c3af5dc8a0525, type: 3}

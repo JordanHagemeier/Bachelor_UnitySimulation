@@ -13,8 +13,7 @@ public class SimulationManager : MonoBehaviour
     [SerializeField] private float              m_GroundTemperature;        public float        groundTemperature { get { return m_GroundTemperature; } }
     [SerializeField] private float              m_HeightScalingFactor;      public float heightScalingFactor { get { return m_HeightScalingFactor; } }
 
-    //TODO Mach die Chunks beim Seed Manager rein! Chunks, in denen eine bestimmte Anzahl an Seeds gespawned wird und mit denen du dann Listen füllen kannst, um nicht immer 
-    //beim check auf "ist das im Radius von mir" gegen alle x tausend Seeds/Plants testen zu müssen!
+    
 
     [Header("Simulation Time")]
     [SerializeField] private float m_Timer;
@@ -38,15 +37,7 @@ public class SimulationManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //m_Timer += Time.deltaTime;
-        //m_TimeTillNextSimTick = m_TimeScale - m_Timer;
-        //m_TimeTillNextSimTickPercentage = m_Timer / m_TimeScale;
-        //if(m_TimeTillNextSimTick <= 0.0f)
-        //{
-        //    m_Timer = 0.0f;
-        //    m_TimeTillNextSimTick = m_TimeScale;
-        //    simulationTick();
-        //}
+       
     }
 
    

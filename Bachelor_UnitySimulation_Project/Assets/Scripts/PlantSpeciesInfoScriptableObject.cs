@@ -50,16 +50,8 @@ public class PlantSpeciesInfoScriptableObject : ScriptableObject
     [Range(0.0f, 1.0f)] [SerializeField] private float m_SoilAcidityWeight; public float soilAcidityWeight { get { return m_SoilAcidityWeight; } }
     [SerializeField] private AnimationCurve m_SoilAciditySatisfaction; public AnimationCurve soilAciditySatisfaction { get { return m_SoilAciditySatisfaction; } }
 
-    //[SerializeField] private float m_TakenClayValue; public float takenClayValue { get { return m_TakenClayValue; } }
-    //[SerializeField] private float m_TakenSandValue; public float takenSandValue { get { return m_TakenSandValue; } }
-    //[SerializeField] private float m_TakenSiltValue; public float takenSiltValue { get { return m_TakenSiltValue; } }
-
-    //[SerializeField] private float m_SoilTakingTestValue;   public float soilTakingTestValue { get { return m_SoilTakingTestValue; } }
+   
     [SerializeField] private float m_PersistenceValue;      public float persistenceValue { get { return m_PersistenceValue; } }
-    //Viability 
-    //We have altitude, occlusion, flow & soil composition
-    //each species should probably have own specifics for each of these values on what it needs and how important it is
-    //example: occlusion: needs a lot of sunlight, flow: needs not so much water
-    //ambivalence of factors by giving factors a priority? 
+   
 
 }
