@@ -526,7 +526,7 @@ MonoBehaviour:
   m_SeaLevelCutOff: 0.99
   m_DistanceBetweenTrees: 1
   m_AdditionalSoilTextureWeight: 0
-  m_UseSoilTexture: 1
+  m_UseSoilTexture: 0
   m_UseSoilpH: 0
   m_ClayMap: {fileID: 0}
   m_SandMap: {fileID: 0}
