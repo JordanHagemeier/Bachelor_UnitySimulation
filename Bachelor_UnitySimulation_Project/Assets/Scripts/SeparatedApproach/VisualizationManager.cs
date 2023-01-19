@@ -37,7 +37,12 @@ public class VisualizationManager : MonoBehaviour
             m_ListOfMatrixArrays.Add(plantDataList);
         }
         m_SimManager = gameObject.GetComponent<SeparatedSimulationManager>();
-        m_PlantSpeciesTable = m_SimManager.plantSpeciesTable;
+        VegetationLifecycleSimulation vegetationSimManager = gameObject.GetComponent<VegetationLifecycleSimulation>();
+        if (!vegetationSimManager| !m_SimManager)
+        {
+            Debug.Log("Manager not found as GameObject Component");
+        }
+        m_PlantSpeciesTable = vegetationSimManager.plantSpeciesTable;
     }
 
 

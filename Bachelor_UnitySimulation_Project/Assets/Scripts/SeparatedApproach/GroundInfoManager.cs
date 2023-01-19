@@ -14,15 +14,18 @@ public class GroundInfoManager : MonoBehaviour
     [SerializeField] private Texture2D m_SoilAcidityMap;
 
     [Header("Max Values for each Map")]
-    [SerializeField] private float m_MaxValueClay;
-    [SerializeField] private float m_MaxValueSand;
-    [SerializeField] private float m_MaxValueSilt;
-    [SerializeField] private float m_MaxPH;
+    [SerializeField] private float m_MaxValueClay;   //solely for debugging purposes
+    [SerializeField] private float m_MaxValueSand;   //solely for debugging purposes
+    [SerializeField] private float m_MaxValueSilt;   //solely for debugging purposes
+    [SerializeField] private float m_MaxPH;          //solely for debugging purposes
 
-    [Header("Everything else")]
-    [SerializeField] private Texture2D m_LandMass;
+    [Header("Terrain")]
+    [SerializeField] private Terrain m_Terrain; public Terrain terrain { get { return m_Terrain; } }
+                     private Bounds m_TerrainBounds;
+    [SerializeField] private Texture2D m_UsableGround;
     [SerializeField] private float m_SeaLevelCutOff;
 
+    [Header("Everything else")]
     [SerializeField] private GameObject m_DebuggingObject;
     [SerializeField] private Material m_DebuggingMaterial;
 
@@ -38,6 +41,7 @@ public class GroundInfoManager : MonoBehaviour
     {
         m_GroundInfoStructArray         = new GroundInfoStruct[(int)m_mapWidth * (int)m_mapHeight];
         m_GroundInfoStructArrayCOPY     = new GroundInfoStruct[m_GroundInfoStructArray.Length];
+        SetupTerrainBounds();
         SetUpComparisonValuesForMapData();
         CopyAllMapsIntoTheStructArray();
         m_GroundInfoStructArray.CopyTo(m_GroundInfoStructArrayCOPY, 0);
@@ -48,7 +52,7 @@ public class GroundInfoManager : MonoBehaviour
     //{
     //    RenderSoilValueToMap();
     //}
-
+  
     // Update is called once per frame
     void Update()
     {
@@ -59,9 +63,20 @@ public class GroundInfoManager : MonoBehaviour
         }
     }
 
+ 
     public void ResetGroundInfoArray()
     {
         m_ResetGroundInfoArray = true;
+    }
+
+    private void SetupTerrainBounds()
+    {
+        m_Terrain = Singletons.simulationManager.terrain;
+        if (!m_Terrain)
+        {
+            Debug.Log("Terrain not found.");
+        }
+        m_TerrainBounds = m_Terrain.terrainData.bounds;
     }
 
     Vector2Int GetIndex2D(int index1D, int width)
@@ -76,9 +91,9 @@ public class GroundInfoManager : MonoBehaviour
         return (iX * (int)m_mapWidth) + iY;
     }
 
-    public GroundInfoStruct GetGroundInfoAtPositionOnTerrain(float x, float y, Vector2 terrainBounds)
+    public GroundInfoStruct GetGroundInfoAtPositionOnTerrain(float x, float y)
     {
-        GroundInfoStruct groundInfo;
+        //GroundInfoStruct groundInfo;
 
         //the map is 1024 x 1024
         //get the position of the plant x and y 
@@ -86,8 +101,8 @@ public class GroundInfoManager : MonoBehaviour
         // get index in one dimension
         //lookup ground info in array 
 
-        float xPercentage = x / terrainBounds.x;
-        float yPercentage = y / terrainBounds.y;
+        float xPercentage = x / m_TerrainBounds.max.x;
+        float yPercentage = y / m_TerrainBounds.max.z;
         Vector2Int positionInGroundGrid = new Vector2Int(Mathf.FloorToInt(xPercentage * m_mapWidth), Mathf.FloorToInt(yPercentage * m_mapHeight));
         int arrayPosition = GetIndex1D(positionInGroundGrid.x, positionInGroundGrid.y);
 
@@ -139,11 +154,11 @@ public class GroundInfoManager : MonoBehaviour
 
 
                 float perc = i / m_mapWidth;
-                int pixelposX = (int)(perc * m_LandMass.width);
+                int pixelposX = (int)(perc * m_UsableGround.width);
 
                 perc = j / m_mapHeight;
-                int pixelposY = (int)(perc * m_LandMass.height);
-                float landValue = m_LandMass.GetPixel(pixelposX, pixelposY).r;
+                int pixelposY = (int)(perc * m_UsableGround.height);
+                float landValue = m_UsableGround.GetPixel(pixelposX, pixelposY).r;
                 //m_GroundInfoStructArray[currentInfo].DEBUGLandValue = landValue;
                 if (landValue > m_SeaLevelCutOff)
                 {
@@ -157,12 +172,17 @@ public class GroundInfoManager : MonoBehaviour
 
     }
 
-    private bool IsOnLand(int x, int y)
+    public bool IsOnLand(Vector3 pos)
     {
-        float pixelX = (x / m_mapWidth) * m_LandMass.width;
+        return GetGroundInfoAtPositionOnTerrain(pos.x, pos.z).onLand;
+    }
 
-        float pixelY = (y / m_mapHeight) * m_LandMass.height;
-        float landValue = m_LandMass.GetPixel((int)pixelX, (int)pixelY).r;
+    public bool IsOnLand(int x, int y)
+    {
+        float pixelX = (x / m_mapWidth) * m_UsableGround.width;
+
+        float pixelY = (y / m_mapHeight) * m_UsableGround.height;
+        float landValue = m_UsableGround.GetPixel((int)pixelX, (int)pixelY).r;
         //m_GroundInfoStructArray[currentInfo].DEBUGLandValue = landValue;
         if (landValue > m_SeaLevelCutOff)
         {

@@ -35,14 +35,25 @@ public enum PlantType
 
 public class PlantSpeciesTable
 {
+    PlantSpeciesInfoScriptableObject crashObject;
     public Dictionary<PlantType, PlantSpeciesInfoScriptableObject> typeToSO = new Dictionary<PlantType, PlantSpeciesInfoScriptableObject>(); 
     public void AddToDictionary(PlantType type, PlantSpeciesInfoScriptableObject SO)
     {
         typeToSO.Add(type, SO);
     }
+    public bool IsEmpty()
+    {
+        return typeToSO.Count == 0;
+    }
     public PlantSpeciesInfoScriptableObject GetSOByType(PlantType type)
     {
-        return typeToSO[type];
+        if (typeToSO.ContainsKey(type))
+        {
+            return typeToSO[type];
+
+        }
+        Debug.Log("Table does not contain key.");
+        return crashObject;
     }
 }
 
