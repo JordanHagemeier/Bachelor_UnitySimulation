@@ -501,13 +501,13 @@ MonoBehaviour:
   m_TimeTillOneYearIsOver: 0
   timer: 0
   m_EvaluateAtIterationID: 01000000050000000c000000140000001e0000002d000000410000004b000000550000005a000000780000008200000091000000a0000000af000000d2000000e600000004010000220100002c010000
+  m_PlantPrimeAgePercentage: 0.8
   m_Terrain: {fileID: 74521680}
   m_RenderAllPlants: 0
   m_WritingTextureTest: {fileID: 0}
   m_WritingTextureTestCopy: {fileID: 0}
   m_CopiedPlants: []
   m_GroundInfoManager: {fileID: 1622023712}
-  m_PlantPrimeAgePercentage: 0.8
 --- !u!4 &1622023710
 Transform:
   m_ObjectHideFlags: 0
@@ -580,9 +580,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Plants: []
-  m_MaxPlantSize: 1
-  m_CurrentPlantAmount: 0
-  m_InitialPlantAmount: 2000
   plantSpecies:
   - {fileID: 11400000, guid: ca2153ac9c03fec45bbc0d9105ab53b2, type: 2}
   - {fileID: 11400000, guid: fdaaf74d60e97cd4e9de078aab97e701, type: 2}
@@ -598,15 +595,16 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 855390f775f6ab0469213ea8fc34c358, type: 2}
   - {fileID: 11400000, guid: 6afe6ed57a0a708468dd9ee049c67d13, type: 2}
   - {fileID: 11400000, guid: a62727651f9ec8a409ea31520a24b7fc, type: 2}
-  m_Terrain: {fileID: 74521680}
-  m_UsableGround: {fileID: 2800000, guid: 7b66bba9f799b3245a7e5e5fb65f42f4, type: 3}
-  m_SeaLevelCutOff: 0.99
-  m_DistanceBetweenTrees: 1
+  m_CurrentPlantAmount: 0
+  m_InitialPlantAmount: 2000
+  m_DistanceBetweenPlants: 0
+  m_MaxPlantSize: 1
   m_AdditionalSoilTextureWeight: 0
   m_UseSoilTexture: 0
   m_UseSoilpH: 1
   m_GroundInfoManager: {fileID: 0}
   m_OverallSimManager: {fileID: 0}
+  m_MapResolution: {x: 1024, y: 1024}
 --- !u!1 &1711725814
 GameObject:
   m_ObjectHideFlags: 0

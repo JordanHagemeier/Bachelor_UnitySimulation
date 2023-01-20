@@ -21,6 +21,8 @@ public class SeparatedSimulationManager : MonoBehaviour
 
     [Header("Plant Information")]
     private VegetationLifecycleSimulation m_VegetationLifecycleSim;
+    [SerializeField] private float m_PlantPrimeAgePercentage; 
+
 
     [Header ("Terrain Information")]
 
@@ -29,9 +31,9 @@ public class SeparatedSimulationManager : MonoBehaviour
 
 
 
+
+    [Header("Debugging Settings")]
     [SerializeField] private bool m_RenderAllPlants;
-
-
     [SerializeField] private Texture2D m_WritingTextureTest;
     [SerializeField] private Texture2D m_WritingTextureTestCopy;
 
@@ -42,8 +44,6 @@ public class SeparatedSimulationManager : MonoBehaviour
     [SerializeField] private GroundInfoManager m_GroundInfoManager;
                              CurrentPlantsSerializer m_PlantSerializer = new CurrentPlantsSerializer();
     [HideInInspector] public PlantSpeciesTable plantSpeciesTable = new PlantSpeciesTable();
-
-    [SerializeField] private float m_PlantPrimeAgePercentage; 
 
 
     private const int m_GRID_CELL_DIVISIONS = 64;
@@ -170,7 +170,7 @@ public class SeparatedSimulationManager : MonoBehaviour
             m_VegetationLifecycleSim.plants = loadedPlants.currentPlantsInSim;
             CopyPlantInfosToVisPlantArray(m_VegetationLifecycleSim.plants);
 
-            //plantsAreUpdated = true;
+           
             Debug.Log("Loaded!");
             Debug.Log(loadedPlants.currentPlantsInSim[0].id);
             Debug.Log(loadedPlants.currentPlantsInSim[0].health);
@@ -182,15 +182,7 @@ public class SeparatedSimulationManager : MonoBehaviour
         }
     }
 
-   
-    //private bool IsOnLand(Vector3 pos)
-    //{
-
-    //    Vector2 terrainBounds = new Vector2(m_Terrain.terrainData.bounds.max.x, m_Terrain.terrainData.bounds.max.z);
-    //    return m_GroundInfoManager.GetGroundInfoAtPositionOnTerrain((int)pos.x, (int)pos.z).onLand;
-
-    //}
-
+  
  
    
     private float GetValueFromSoilCompositionMap(Texture2D texture,Vector2 pos)

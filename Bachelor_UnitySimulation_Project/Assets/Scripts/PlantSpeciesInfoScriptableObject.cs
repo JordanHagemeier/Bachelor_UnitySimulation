@@ -52,6 +52,6 @@ public class PlantSpeciesInfoScriptableObject : ScriptableObject
 
    
     [SerializeField] private float m_PersistenceValue;      public float persistenceValue { get { return m_PersistenceValue; } }
-   
 
+   
 }

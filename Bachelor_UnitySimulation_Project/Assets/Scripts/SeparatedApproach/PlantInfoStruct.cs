@@ -30,6 +30,7 @@ public enum PlantType
     //PseudotsugaMenziesii,
     QuercusRoburEtPetraea,
     Robinia,
+    //Debug,
     Count
 }
 
@@ -54,6 +55,15 @@ public class PlantSpeciesTable
         }
         Debug.Log("Table does not contain key.");
         return crashObject;
+    }
+    public bool PlantWeightsAreSet(PlantType type)
+    {
+        PlantSpeciesInfoScriptableObject plantInfo = GetSOByType(type);
+        if (plantInfo.temperatureWeight == 0.0f || plantInfo.occlusionFactorWeight == 0.0f || plantInfo.flowFactorWeight == 0.0f || plantInfo.soilTextureWeight == 0.0f || plantInfo.soilAcidityWeight == 0.0f)
+        {
+            return false;
+        }
+        return true;
     }
 }
 

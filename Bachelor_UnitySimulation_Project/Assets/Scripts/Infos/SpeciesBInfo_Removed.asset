@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b8ba8bd08ab15c4cacc562fc1426a13, type: 3}
   m_Name: SpeciesBInfo_Removed
   m_EditorClassIdentifier: 
-  m_PlantType: 0
+  m_PlantType: 14
   m_OwnSpeciesPrefab: {fileID: 7442068329141730791, guid: 0e59ff24015778c4da81c09ed17a9e2b, type: 3}
   m_OwnMaterial: {fileID: 2100000, guid: a62e8da5194101042a4d89028ef6f912, type: 2}
   m_TypeColor: {r: 0.011347453, g: 0.21373469, b: 0.4811321, a: 1}
